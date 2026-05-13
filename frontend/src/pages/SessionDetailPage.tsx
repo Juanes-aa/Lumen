@@ -20,13 +20,7 @@ function renderParagraphs(text: string): React.ReactNode {
   return paragraphs.map((para, i) => (
     <p
       key={i}
-      style={{
-        fontFamily: "'DM Sans', sans-serif",
-        fontSize: 13.5,
-        color: '#FAF9F6',
-        lineHeight: 1.75,
-        marginBottom: i < paragraphs.length - 1 ? 12 : 0,
-      }}
+      className={`font-sans text-[13.5px] text-celuloide leading-[1.75] ${i < paragraphs.length - 1 ? 'mb-3' : ''}`}
     >
       {para}
     </p>
@@ -68,18 +62,13 @@ export default function SessionDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ flex: 1, padding: '28px 44px', overflowY: 'auto' }}>
-        <div style={{ height: 16, width: 140, background: '#252421', borderRadius: 4, marginBottom: 24 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="flex-1 px-11 py-7 overflow-y-auto">
+        <div className="h-4 w-[140px] bg-pantalla rounded-[4px] mb-6 animate-pulse" />
+        <div className="flex flex-col gap-4">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              style={{
-                height: 70,
-                background: '#1E1D1B',
-                border: '0.4px solid #2E2D2B',
-                borderRadius: 10,
-              }}
+              className="h-[70px] bg-pantalla-soft border-[0.4px] border-borde rounded-[10px] animate-pulse"
             />
           ))}
         </div>
@@ -89,24 +78,19 @@ export default function SessionDetailPage() {
 
   if (error !== null) {
     return (
-      <div style={{ flex: 1, padding: '28px 44px' }}>
+      <div className="flex-1 px-11 py-7">
         <button
           type="button"
-          onClick={() => {
-            navigate('/history')
-          }}
-          className="lumen-btn-ghost"
-          style={{ marginBottom: 16 }}
+          onClick={() => { navigate('/history') }}
+          className="lumen-btn-ghost mb-4"
         >
           ← Volver al historial
         </button>
-        <p style={{ color: '#E24B4A', marginBottom: 16 }}>{error}</p>
+        <p role="alert" className="text-warn mb-4">{error}</p>
         <button
           type="button"
           className="lumen-btn-primary"
-          onClick={() => {
-            setFetchTrigger((n) => n + 1)
-          }}
+          onClick={() => { setFetchTrigger((n) => n + 1) }}
         >
           Reintentar
         </button>
@@ -117,184 +101,75 @@ export default function SessionDetailPage() {
   const isActive: boolean = session?.status === 'active'
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-      <div
-        className="lumen-anim-1"
-        style={{
-          padding: '20px 44px',
-          borderBottom: '0.4px solid #2E2D2B',
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
-        }}
-      >
+    <div className="flex-1 overflow-y-auto flex flex-col">
+      {/* Header */}
+      <div className="lumen-anim-1 px-11 py-5 border-b-[0.4px] border-borde shrink-0 flex items-center gap-[14px]">
         <button
           type="button"
-          onClick={() => {
-            navigate('/history')
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#888780',
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 12,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            cursor: 'pointer',
-            padding: 0,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#FAF9F6'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#888780'
-          }}
+          onClick={() => { navigate('/history') }}
+          className="inline-flex items-center gap-[6px] bg-transparent border-none text-gray-mid font-sans text-[12px] cursor-pointer p-0 transition-colors hover:text-celuloide focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <polyline points="15 18 9 12 15 6" />
           </svg>
           Historial
         </button>
 
-        {session !== null && (
+        {session !== null ? (
           <>
-            <span style={{ color: '#444441', fontSize: 12 }}>·</span>
-            <p
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: 18,
-                fontWeight: 500,
-                color: '#FAF9F6',
-                letterSpacing: '-0.01em',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: 360,
-              }}
-            >
+            <span className="text-gray-dark text-[12px]">·</span>
+            <p className="font-serif text-[18px] font-medium text-celuloide tracking-[-0.01em] whitespace-nowrap overflow-hidden text-ellipsis max-w-[360px]">
               {session.movie_title}
             </p>
-            <span
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 10,
-                color: '#888780',
-                letterSpacing: '0.06em',
-              }}
-            >
+            <span className="font-mono text-[10px] text-gray-mid tracking-[0.06em]">
               {dateFormatter.format(new Date(session.started_at))}
             </span>
             <span
-              style={{
-                marginLeft: 'auto',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                background: isActive ? '#04342C' : '#252421',
-                border: `0.4px solid ${isActive ? 'rgba(29, 158, 117, 0.25)' : '#2E2D2B'}`,
-                borderRadius: 4,
-                padding: '2px 7px',
-              }}
+              className={`ml-auto inline-flex items-center gap-[5px] rounded-[4px] px-[7px] py-[2px] border-[0.4px] ${
+                isActive
+                  ? 'bg-teal-dark border-[rgba(29,158,117,0.25)]'
+                  : 'bg-pantalla border-borde'
+              }`}
             >
               <span
-                style={{
-                  width: 5,
-                  height: 5,
-                  borderRadius: '50%',
-                  background: isActive ? '#1D9E75' : '#888780',
-                }}
+                aria-hidden="true"
+                className={`w-[5px] h-[5px] rounded-full inline-block ${isActive ? 'bg-teal' : 'bg-gray-mid'}`}
               />
               <span
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: 9.5,
-                  color: isActive ? '#1D9E75' : '#888780',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                }}
+                className={`font-mono text-[9.5px] tracking-[0.06em] uppercase ${isActive ? 'text-teal' : 'text-gray-mid'}`}
               >
                 {isActive ? 'Activa' : 'Cerrada'}
               </span>
             </span>
-            {isActive && (
+            {isActive ? (
               <button
                 type="button"
                 className="lumen-btn-primary sm"
-                onClick={() => {
-                  navigate(`/analysis/${session.id}`)
-                }}
+                onClick={() => { navigate(`/analysis/${session.id}`) }}
               >
                 Retomar
               </button>
-            )}
+            ) : null}
           </>
-        )}
+        ) : null}
       </div>
 
-      <div
-        className="lumen-anim-2"
-        style={{
-          flex: 1,
-          padding: '28px 44px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 28,
-          maxWidth: 880,
-          width: '100%',
-          marginInline: 'auto',
-        }}
-      >
+      {/* Messages */}
+      <div className="lumen-anim-2 flex-1 px-11 py-7 flex flex-col gap-7 max-w-[880px] w-full mx-auto">
         {messages.length === 0 ? (
-          <p
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: 'italic',
-              fontSize: 16,
-              color: '#888780',
-              textAlign: 'center',
-              padding: '40px 0',
-            }}
-          >
+          <p className="font-serif italic text-base text-gray-mid text-center py-10">
             Esta sesión no tiene mensajes todavía.
           </p>
         ) : (
           messages.map((m) => {
             if (m.role === 'user') {
               return (
-                <div key={m.id} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <div
-                    style={{
-                      maxWidth: '62%',
-                      background: '#252421',
-                      border: '0.4px solid #2E2D2B',
-                      borderRadius: '10px 10px 2px 10px',
-                      padding: '10px 14px',
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontFamily: "'DM Sans', sans-serif",
-                        fontSize: 13,
-                        color: '#FAF9F6',
-                        lineHeight: 1.65,
-                        whiteSpace: 'pre-wrap',
-                      }}
-                    >
+                <div key={m.id} className="flex justify-end">
+                  <div className="max-w-[62%] bg-pantalla border-[0.4px] border-borde rounded-[10px_10px_2px_10px] px-[14px] py-[10px]">
+                    <p className="font-sans text-[13px] text-celuloide leading-[1.65] whitespace-pre-wrap">
                       {m.content}
                     </p>
-                    <p
-                      style={{
-                        fontFamily: "'DM Mono', monospace",
-                        fontSize: 9.5,
-                        color: '#444441',
-                        letterSpacing: '0.05em',
-                        marginTop: 6,
-                        textAlign: 'right',
-                      }}
-                    >
+                    <p className="font-mono text-[9.5px] text-gray-dark tracking-[0.05em] mt-[6px] text-right">
                       {timeFormatter.format(new Date(m.created_at))}
                     </p>
                   </div>
@@ -302,32 +177,12 @@ export default function SessionDetailPage() {
               )
             }
             return (
-              <div
-                key={m.id}
-                style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: '68%' }}
-              >
-                <span
-                  style={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 11,
-                    color: '#888780',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  Lumen
-                </span>
-                <div style={{ borderLeft: '2px solid #FAC775', paddingLeft: 14 }}>
+              <div key={m.id} className="flex flex-col gap-[6px] max-w-[68%]">
+                <span className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">Lumen</span>
+                <div className="border-l-2 border-amber pl-[14px]">
                   {renderParagraphs(m.content)}
                 </div>
-                <span
-                  style={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 9.5,
-                    color: '#444441',
-                    letterSpacing: '0.05em',
-                    marginTop: 4,
-                  }}
-                >
+                <span className="font-mono text-[9.5px] text-gray-dark tracking-[0.05em] mt-1">
                   {timeFormatter.format(new Date(m.created_at))}
                 </span>
               </div>
@@ -335,43 +190,22 @@ export default function SessionDetailPage() {
           })
         )}
 
-        {session?.has_tags === true && (
-          <div className="lumen-section" style={{ marginTop: 16 }}>
-            <span className="lumen-overline" style={{ marginBottom: 10 }}>
-              Etiquetas extraídas
-            </span>
-            <p
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 12.5,
-                color: '#888780',
-                lineHeight: 1.6,
-              }}
-            >
-              Las etiquetas semánticas alimentan tu perfil. Velas en{' '}
+        {session?.has_tags === true ? (
+          <div className="lumen-section mt-4">
+            <span className="lumen-overline mb-[10px]">Etiquetas extraídas</span>
+            <p className="font-sans text-[12.5px] text-gray-mid leading-[1.6]">
+              Las etiquetas semánticas alimentan tu perfil. Vélas en{' '}
               <button
                 type="button"
-                onClick={() => {
-                  navigate('/profile')
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#FAC775',
-                  fontFamily: 'inherit',
-                  fontSize: 'inherit',
-                  cursor: 'pointer',
-                  padding: 0,
-                  textDecoration: 'underline',
-                  textUnderlineOffset: 2,
-                }}
+                onClick={() => { navigate('/profile') }}
+                className="bg-transparent border-none text-amber font-sans text-[12.5px] cursor-pointer p-0 underline underline-offset-[2px]"
               >
                 tu perfil
               </button>
               .
             </p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

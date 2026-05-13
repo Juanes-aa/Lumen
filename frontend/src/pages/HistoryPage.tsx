@@ -32,8 +32,7 @@ function SessionRow({ session, isSelected, onClick }: SessionRowProps): React.Re
       role="button"
       tabIndex={0}
       aria-label={`Abrir sesión: ${session.movie_title}`}
-      className="group flex items-start gap-4 px-5 py-[18px] border-b-[0.4px] border-borde cursor-pointer transition-colors hover:bg-pantalla first:border-t-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
-      style={{ background: isSelected ? '#252421' : 'transparent' }}
+      className={`group flex items-start gap-4 px-5 py-[18px] border-b-[0.4px] border-borde cursor-pointer transition-colors hover:bg-pantalla first:border-t-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${isSelected ? 'bg-pantalla' : ''}`}
     >
       <Poster url={session.movie_poster_url} alt={session.movie_title} width={44} height={66} />
 
