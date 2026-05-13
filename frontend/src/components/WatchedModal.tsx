@@ -57,22 +57,40 @@ export default function WatchedModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="watched-modal-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[rgba(15,14,13,0.7)] backdrop-blur-[4px] lumen-fade-in"
+      className="lumen-fade-in"
+      style={{
+        position: 'fixed', inset: 0, zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 16,
+        background: 'rgba(15,14,13,0.75)',
+        backdropFilter: 'blur(4px)',
+      }}
     >
-      <div className="w-full max-w-[460px] bg-sala border-[0.4px] border-borde rounded-xl p-6 shadow-[0_16px_64px_rgba(0,0,0,0.6)]">
+      <div
+        style={{
+          width: '100%', maxWidth: 460,
+          background: '#1A1917',
+          border: '0.4px solid #2E2D2B',
+          borderRadius: 16,
+          padding: '28px 28px 24px',
+          boxShadow: '0 16px 64px rgba(0,0,0,0.6)',
+        }}
+      >
         <h2
           id="watched-modal-title"
-          className="font-serif text-[22px] font-medium text-celuloide tracking-[-0.01em] mb-1"
+          className="font-serif text-celuloide"
+          style={{ fontSize: 22, fontWeight: 500, letterSpacing: '-0.01em', marginBottom: 6 }}
         >
           Marcar como vista
         </h2>
-        <p className="font-mono text-[10px] text-gray-mid tracking-[0.06em] mb-[18px]">
+        <p className="font-mono text-gray-mid" style={{ fontSize: 10.5, letterSpacing: '0.06em', marginBottom: 20 }}>
           Una nota inicial puede ayudar a recordar el contexto.
         </p>
 
         <label
           htmlFor="watched-note"
-          className="font-sans text-xs text-gray-mid block mb-[6px]"
+          className="font-sans text-gray-mid"
+          style={{ fontSize: 11, display: 'block', marginBottom: 6 }}
         >
           Nota inicial (opcional)
         </label>
@@ -89,11 +107,11 @@ export default function WatchedModal({
           rows={4}
           maxLength={MAX_NOTE_LENGTH}
         />
-        <p className="font-mono text-[10px] text-gray-dark tracking-[0.05em] text-right mt-[6px] mb-[18px]">
+        <p className="font-mono text-gray-dark" style={{ fontSize: 10, letterSpacing: '0.05em', textAlign: 'right', marginTop: 6, marginBottom: 20 }}>
           {note.length}/{MAX_NOTE_LENGTH.toString()}
         </p>
 
-        <div className="flex justify-end gap-[10px]">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <Button variant="ghost" onClick={onClose} disabled={isLoading} className="text-xs px-[14px] py-2">
             Cancelar
           </Button>
