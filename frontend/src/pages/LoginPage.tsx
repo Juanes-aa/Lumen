@@ -121,7 +121,7 @@ export default function LoginPage(): React.ReactElement {
         </form>
 
         {/* ── Footer ── */}
-        <div className="mt-7 pt-5 border-t border-[rgba(46,45,43,0.5)]">
+        <div className="mt-9 pt-6 border-t border-[rgba(46,45,43,0.5)]">
           <p className="text-center font-sans text-[13px] text-gray-mid">
             ¿No tienes cuenta?{' '}
             <Link
