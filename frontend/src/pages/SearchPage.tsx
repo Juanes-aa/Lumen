@@ -6,6 +6,11 @@ import LumenSymbol from '../components/LumenSymbol'
 import Poster from '../components/ui/Poster'
 import type { TmdbSearchResult } from '../types/tmdb'
 
+const GENRES: string[] = [
+  'Drama', 'Terror', 'Sci-Fi', 'Comedia', 'Thriller',
+  'Animación', 'Documental', 'Romance',
+]
+
 interface SearchResultCardProps {
   movie: TmdbSearchResult
   onClick: () => void
@@ -19,22 +24,16 @@ function SearchResultCard({ movie, onClick }: SearchResultCardProps): React.Reac
     <button
       type="button"
       onClick={onClick}
-      className="group bg-pantalla border-[0.4px] border-borde rounded-[8px] cursor-pointer text-left flex flex-col overflow-hidden transition-[border-color,transform] hover:border-amber hover:-translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+      className="bg-pantalla border-[0.4px] border-borde rounded-[8px] cursor-pointer text-left flex flex-col overflow-hidden transition-[border-color,transform] hover:border-amber hover:-translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
     >
-      <div className="border-b-[0.4px] border-borde relative">
+      <div className="border-b-[0.4px] border-borde">
         <Poster url={posterUrl} alt={movie.title} fluid rounded="none" />
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-[rgba(15,14,13,0.55)] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="font-sans text-[11px] font-medium text-celuloide bg-amber text-amber-dark rounded-[5px] px-3 py-[6px]">
-            Ver detalle
-          </span>
-        </div>
       </div>
-      <div className="px-3 pt-[10px] pb-3">
-        <p className="font-serif text-[13.5px] font-medium text-celuloide leading-[1.2] mb-[4px] line-clamp-2">
+      <div style={{ padding: '10px 11px 12px' }}>
+        <p className="font-serif text-celuloide" style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.2, marginBottom: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {movie.title}
         </p>
-        <p className="font-mono text-[9.5px] text-gray-mid tracking-[0.04em]">{year}</p>
+        <p className="font-mono text-gray-mid" style={{ fontSize: 9.5, letterSpacing: '0.04em' }}>{year}</p>
       </div>
     </button>
   )
@@ -42,11 +41,11 @@ function SearchResultCard({ movie, onClick }: SearchResultCardProps): React.Reac
 
 function SkeletonCard(): React.ReactElement {
   return (
-    <div className="bg-pantalla border-[0.4px] border-borde rounded-[8px] overflow-hidden">
+    <div className="bg-pantalla border-[0.4px] border-borde rounded-[10px] overflow-hidden">
       <div className="aspect-[2/3] bg-pantalla-soft animate-pulse" />
-      <div className="px-3 pt-[10px] pb-3">
-        <div className="h-[10px] w-[70%] bg-pantalla-soft rounded-[2px] mb-[6px] animate-pulse" />
-        <div className="h-2 w-[30%] bg-pantalla-soft rounded-[2px] animate-pulse" />
+      <div style={{ padding: '10px 11px 12px' }}>
+        <div style={{ height: 10, width: '70%', background: '#1E1D1B', borderRadius: 2, marginBottom: 6 }} className="animate-pulse" />
+        <div style={{ height: 8, width: '30%', background: '#1E1D1B', borderRadius: 2 }} className="animate-pulse" />
       </div>
     </div>
   )
@@ -68,11 +67,26 @@ export default function SearchPage(): React.ReactElement {
   const noResults: boolean = hasSearched && results.length === 0 && error === null
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
       {/* ── Barra de búsqueda ── */}
-      <div className="lumen-anim-1 px-11 pt-9 pb-6 shrink-0 border-b-[0.4px] border-borde">
-        <div className="flex items-center gap-3 bg-pantalla-soft border-[0.5px] border-borde rounded-[10px] px-4 py-[13px] transition-colors focus-within:border-amber">
-          <LumenSymbol size={17} />
+      <div
+        className="lumen-anim-1"
+        style={{
+          padding: '36px 44px 24px',
+          flexShrink: 0,
+          borderBottom: !tooShort ? '0.4px solid #2E2D2B' : 'none',
+        }}
+      >
+        <div
+          className="focus-within:border-amber transition-colors"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: '#1E1D1B', border: '0.5px solid #2E2D2B',
+            borderRadius: 10, padding: '12px 16px', maxWidth: 720,
+          }}
+        >
+          <LumenSymbol size={18} />
           <input
             ref={inputRef}
             type="text"
@@ -80,16 +94,21 @@ export default function SearchPage(): React.ReactElement {
             onChange={(e) => { setQuery(e.target.value) }}
             placeholder="¿Qué escena no puedes dejar de pensar?"
             aria-label="Buscar película"
-            className="bg-transparent border-none text-celuloide font-sans text-[13.5px] flex-1 p-0 focus:outline-none placeholder:text-gray-soft"
+            style={{
+              background: 'transparent', border: 'none',
+              color: '#FAF9F6', fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14, flex: 1, padding: 0,
+            }}
           />
           {query !== '' ? (
             <button
               type="button"
               onClick={() => { setQuery('') }}
               aria-label="Limpiar búsqueda"
-              className="bg-transparent border-none cursor-pointer text-gray-mid flex p-0 hover:text-celuloide transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#888780', display: 'flex', padding: 0 }}
+              className="hover:text-celuloide"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -99,33 +118,28 @@ export default function SearchPage(): React.ReactElement {
       </div>
 
       {/* ── Contenido ── */}
-      <div className="flex-1 overflow-y-auto px-11 pt-7 pb-14">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 44px 48px' }}>
 
-        {/* Error */}
         {error !== null ? (
-          <p role="alert" className="font-sans text-[13px] text-warn text-center py-10">
+          <p role="alert" className="font-sans text-warn" style={{ fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
             {error}
           </p>
         ) : null}
 
-        {/* Skeleton carga */}
         {isLoading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
-            {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <SkeletonCard key={i} />
-            ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {[0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)}
           </div>
         ) : null}
 
-        {/* Resultados */}
         {!isLoading && error === null && results.length > 0 ? (
           <div className="lumen-anim-2">
-            <div className="flex items-center justify-between mb-6">
-              <span className="lumen-overline">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <span className="font-mono text-gray-mid" style={{ fontSize: 10, letterSpacing: '0.06em' }}>
                 {results.length} resultado{results.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
               {results.map((movie) => (
                 <SearchResultCard
                   key={movie.id}
@@ -137,39 +151,42 @@ export default function SearchPage(): React.ReactElement {
           </div>
         ) : null}
 
-        {/* Sin resultados */}
         {noResults ? (
-          <div className="text-center px-5 py-[60px]">
-            <p className="font-serif italic text-[20px] text-gray-mid leading-[1.5]">
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <p className="font-serif italic text-gray-mid" style={{ fontSize: 18, lineHeight: 1.5 }}>
               No encontramos películas para "{trimmed}".
             </p>
-            <p className="font-sans text-[12.5px] text-gray-soft mt-2">
+            <p className="font-sans text-gray-soft" style={{ fontSize: 12.5, marginTop: 8 }}>
               Intenta con otro título o nombre del director.
             </p>
           </div>
         ) : null}
 
-        {/* Estado vacío inicial */}
         {tooShort && error === null && !isLoading ? (
-          <div className="lumen-anim-1 mt-5">
-            <p className="font-serif italic text-[24px] font-normal text-celuloide leading-[1.3] mb-8 max-w-[520px]">
+          <div className="lumen-anim-1">
+            <p className="font-serif italic text-celuloide" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 28, maxWidth: 500 }}>
               Empieza por el título. O por lo que todavía estás procesando.
             </p>
-            <p className="lumen-overline mb-4">Por género</p>
-            <div className="flex flex-wrap gap-2">
-              {['Drama', 'Terror', 'Sci-Fi', 'Comedia', 'Thriller', 'Animación', 'Documental', 'Romance'].map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => { setQuery(g) }}
-                  className="lumen-chip-suggestion text-[11.5px] px-3 py-[6px]"
-                >
-                  {g}
-                </button>
-              ))}
+
+            {/* Filtros por género */}
+            <div>
+              <p className="lumen-overline" style={{ marginBottom: 14 }}>Por género</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {GENRES.map((genre) => (
+                  <button
+                    key={genre}
+                    type="button"
+                    onClick={() => { setQuery(genre) }}
+                    className="lumen-chip-suggestion"
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
+
       </div>
     </div>
   )
