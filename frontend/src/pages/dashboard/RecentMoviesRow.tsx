@@ -3,20 +3,26 @@ import { useNavigate } from 'react-router-dom'
 import Poster from '../../components/ui/Poster'
 import { useSessionsQuery, useWatchedMoviesQuery } from '../../api/queries'
 import type { WatchedMovie } from '../../types/library'
+import type { SessionSummary } from '../../types/analysis'
 import EmptyDashboard from './EmptyDashboard'
 
 interface RecentMovieCardProps {
   movie: WatchedMovie
   hasAnalysis: boolean
-  onClick: () => void
+  closedSessionId: string | undefined
+  onNavigate: (path: string) => void
 }
 
-function RecentMovieCard({ movie, hasAnalysis, onClick }: RecentMovieCardProps): React.ReactElement {
+function RecentMovieCard({ movie, hasAnalysis, closedSessionId, onNavigate }: RecentMovieCardProps): React.ReactElement {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="bg-pantalla border-[0.4px] border-borde rounded-[10px] p-[14px] cursor-pointer text-left flex flex-col gap-[10px] transition-colors hover:border-borde-soft hover:bg-[#2A2927] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+    <div
+      className="group bg-pantalla border-[0.4px] border-borde rounded-[10px] p-[14px] cursor-pointer text-left flex flex-col gap-[10px] transition-colors hover:border-borde-soft hover:bg-[#2A2927] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+      onClick={() => { onNavigate(`/movie/${movie.tmdb_id.toString()}`) }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onNavigate(`/movie/${movie.tmdb_id.toString()}`)
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="relative">
         <Poster url={movie.poster_url} alt={movie.title} fluid rounded="md" />
@@ -26,6 +32,7 @@ function RecentMovieCard({ movie, hasAnalysis, onClick }: RecentMovieCardProps):
           </span>
         ) : null}
       </div>
+
       <div>
         <p className="font-serif text-[14px] font-medium text-celuloide leading-tight mb-[3px]">
           {movie.title}
@@ -34,7 +41,46 @@ function RecentMovieCard({ movie, hasAnalysis, onClick }: RecentMovieCardProps):
           {movie.release_year ?? '—'}
         </p>
       </div>
-    </button>
+
+      {/* Hover actions */}
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex gap-[6px] mt-[2px]">
+        {hasAnalysis ? (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onNavigate(closedSessionId !== undefined ? `/history/${closedSessionId}` : '/history')
+              }}
+              className="flex-1 bg-transparent border-[0.4px] border-borde rounded-[4px] text-gray-mid font-sans text-[10.5px] py-[5px] px-[10px] cursor-pointer hover:text-celuloide hover:border-borde-soft transition-colors"
+            >
+              Ver análisis
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onNavigate(`/movie/${movie.tmdb_id.toString()}`)
+              }}
+              className="flex-1 bg-amber border-none rounded-[4px] text-amber-dark font-sans text-[10.5px] font-medium py-[5px] px-[10px] cursor-pointer"
+            >
+              Nueva sesión
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onNavigate(`/movie/${movie.tmdb_id.toString()}`)
+            }}
+            className="w-full bg-amber border-none rounded-[4px] text-amber-dark font-sans text-[10.5px] font-medium py-[5px] px-[10px] cursor-pointer"
+          >
+            Analizar ahora
+          </button>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -68,6 +114,17 @@ export default function RecentMoviesRow(): React.ReactElement {
     return set
   }, [sessionsQuery.data, movies])
 
+  // Map movie.id → most recent closed session ID for "Ver análisis" navigation
+  const closedSessionByMovieId: Map<string, string> = useMemo(() => {
+    const map = new Map<string, string>()
+    ;(sessionsQuery.data ?? [])
+      .filter((s: SessionSummary) => s.status === 'closed')
+      .forEach((s: SessionSummary) => {
+        if (!map.has(s.movie_id)) map.set(s.movie_id, s.id)
+      })
+    return map
+  }, [sessionsQuery.data])
+
   const isLoading: boolean = moviesQuery.isPending
   const hasError: boolean = moviesQuery.isError
 
@@ -78,9 +135,7 @@ export default function RecentMoviesRow(): React.ReactElement {
         <button
           type="button"
           className="lumen-btn-ghost text-[11px]"
-          onClick={() => {
-            navigate('/library')
-          }}
+          onClick={() => { navigate('/library') }}
         >
           Ver todas →
         </button>
@@ -96,9 +151,8 @@ export default function RecentMoviesRow(): React.ReactElement {
               key={m.id}
               movie={m}
               hasAnalysis={analyzedTmdbIds.has(m.tmdb_id)}
-              onClick={() => {
-                navigate(`/movie/${m.tmdb_id.toString()}`)
-              }}
+              closedSessionId={closedSessionByMovieId.get(m.id)}
+              onNavigate={(path) => { navigate(path) }}
             />
           ))}
         </div>

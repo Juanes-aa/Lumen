@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { useSessionsQuery, useWatchedMoviesQuery } from '../api/queries'
+import { useSessionsQuery, useWatchedMoviesQuery, useSemanticProfileQuery } from '../api/queries'
 import Poster from '../components/ui/Poster'
 import Button from '../components/ui/Button'
 import RecentMoviesRow from './dashboard/RecentMoviesRow'
@@ -31,17 +31,16 @@ function relativeTime(dateStr: string | null): string {
 interface ActiveSessionCardProps {
   session: SessionSummary
   releaseYear: number | null
+  tags: string[]
   onResume: () => void
 }
 
-function ActiveSessionCard({ session, releaseYear, onResume }: ActiveSessionCardProps): React.ReactElement {
+function ActiveSessionCard({ session, releaseYear, tags, onResume }: ActiveSessionCardProps): React.ReactElement {
   return (
     <div className="bg-pantalla border-[0.5px] border-amber rounded-[10px] px-5 py-4 flex items-center gap-4 relative overflow-hidden">
       <div
         className="absolute top-[-30px] right-[-30px] w-[120px] h-[120px] pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle, rgba(250, 199, 117, 0.07) 0%, transparent 70%)',
-        }}
+        style={{ background: 'radial-gradient(circle, rgba(250,199,117,0.07) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
       <Poster
@@ -60,6 +59,18 @@ function ActiveSessionCard({ session, releaseYear, onResume }: ActiveSessionCard
         <p className="font-mono text-[10.5px] text-gray-mid tracking-[0.04em]">
           {releaseYear !== null ? `${releaseYear} · ` : ''}Continuando sesión…
         </p>
+        {tags.length > 0 ? (
+          <div className="flex gap-[6px] mt-[10px] flex-wrap">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="bg-[rgba(250,199,117,0.08)] border-[0.4px] border-[rgba(250,199,117,0.25)] rounded-[4px] text-amber font-mono text-[9.5px] px-[8px] py-[3px] tracking-[0.06em] whitespace-nowrap"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
       <Button size="sm" className="shrink-0" onClick={onResume}>
         Retomar
@@ -74,6 +85,8 @@ export default function DashboardPage(): React.ReactElement | null {
 
   const sessionsQuery = useSessionsQuery()
   const moviesQuery = useWatchedMoviesQuery()
+  const profileQuery = useSemanticProfileQuery()
+
   const sessions: SessionSummary[] = sessionsQuery.data ?? []
   const movies: WatchedMovie[] = moviesQuery.data ?? []
 
@@ -93,12 +106,19 @@ export default function DashboardPage(): React.ReactElement | null {
     return movie?.release_year ?? null
   }, [activeSession, movies])
 
+  // Show top 2 profile tags as amber chips when the session has tags
+  const activeSessionTags: string[] = useMemo(() => {
+    if (activeSession === null || !activeSession.has_tags) return []
+    return (profileQuery.data?.temas_frecuentes ?? []).slice(0, 2).map((t) => t.value)
+  }, [activeSession, profileQuery.data])
+
   if (token === null) return null
 
   return (
     <div className="flex-1 flex min-w-0 overflow-hidden">
       {/* Main column */}
       <div className="flex-1 overflow-y-auto px-10 py-10 pl-11">
+
         {/* Welcome */}
         <div className="lumen-anim-1 mb-9">
           <p className="lumen-overline mb-2">{greeting()}</p>
@@ -124,9 +144,8 @@ export default function DashboardPage(): React.ReactElement | null {
             <ActiveSessionCard
               session={activeSession}
               releaseYear={activeMovieYear}
-              onResume={() => {
-                navigate(`/analysis/${activeSession.id}`)
-              }}
+              tags={activeSessionTags}
+              onResume={() => { navigate(`/analysis/${activeSession.id}`) }}
             />
           </div>
         ) : null}
