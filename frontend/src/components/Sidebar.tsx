@@ -6,16 +6,16 @@ import LumenSymbol from './LumenSymbol'
 interface NavSpec {
   to: string
   label: string
+  end?: boolean
 }
 
 const NAV_ITEMS: NavSpec[] = [
-  { to: '/', label: 'Inicio' },
+  { to: '/', label: 'Inicio', end: true },
   { to: '/search', label: 'Explorar' },
   { to: '/library', label: 'Mis películas' },
   { to: '/history', label: 'Análisis' },
   { to: '/recommendations', label: 'Recomendaciones' },
   { to: '/profile', label: 'Perfil' },
-  { to: '/profile', label: 'Configuración' },
 ]
 
 export default function Sidebar(): React.ReactElement {
@@ -35,23 +35,33 @@ export default function Sidebar(): React.ReactElement {
   return (
     <aside
       aria-label="Navegación principal"
-      className="w-[220px] shrink-0 h-full bg-abyss border-r-[0.4px] border-borde flex flex-col pt-7 pb-5"
+      style={{
+        width: 220,
+        flexShrink: 0,
+        height: '100%',
+        background: '#0F0E0D',
+        borderRight: '0.4px solid #2E2D2B',
+        display: 'flex',
+        flexDirection: 'column',
+        paddingTop: 24,
+        paddingBottom: 20,
+      }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-[10px] px-[18px] mb-10">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 18px', marginBottom: 36 }}>
         <LumenSymbol size={26} />
-        <span className="font-serif text-[26px] font-medium text-celuloide tracking-[-0.02em] leading-none">
+        <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 500, color: '#FAF9F6', letterSpacing: '-0.02em', lineHeight: 1 }}>
           Lumen
         </span>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 flex flex-col gap-[2px]">
+      {/* Nav principal */}
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {NAV_ITEMS.map((item) => (
           <NavLink
-            key={`${item.to}-${item.label}`}
+            key={item.to}
             to={item.to}
-            end={item.to === '/'}
+            end={item.end}
             className={({ isActive }) => `lumen-nav-item${isActive ? ' active' : ''}`}
           >
             {item.label}
@@ -60,27 +70,57 @@ export default function Sidebar(): React.ReactElement {
       </nav>
 
       {/* Bottom */}
-      <div className="border-t-[0.4px] border-borde pt-4 flex flex-col gap-3">
-        <div className="mx-[14px]">
-          <div className="bg-sala border-[0.4px] border-borde rounded-md px-[10px] py-2 flex flex-col gap-[7px]">
-            <div className="flex justify-between items-center">
-              <span className="font-mono text-[10px] text-gray-mid tracking-[0.1em] uppercase">
+      <div style={{ borderTop: '0.4px solid #2E2D2B', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <NavLink
+          to="/profile"
+          className={({ isActive }) => `lumen-nav-item${isActive ? ' active' : ''}`}
+          style={{ fontSize: 13 }}
+        >
+          Configuración
+        </NavLink>
+
+        <div style={{ margin: '6px 14px 0' }}>
+          <div style={{ background: '#1A1917', border: '0.4px solid #2E2D2B', borderRadius: 6, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#888780', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 Plan
               </span>
-              <span className="font-mono text-[10px] text-gray-mid">Free</span>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#888780' }}>Free</span>
             </div>
             <button
               type="button"
-              className="bg-transparent border-[0.4px] border-[rgba(250,199,117,0.25)] rounded-[4px] text-amber font-sans text-[11px] font-medium py-[5px] cursor-pointer w-full text-center hover:bg-[rgba(250,199,117,0.06)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+              style={{
+                background: 'transparent',
+                border: '0.4px solid rgba(250,199,117,0.25)',
+                borderRadius: 4,
+                color: '#FAC775',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 11,
+                fontWeight: 500,
+                padding: '5px 0',
+                cursor: 'pointer',
+                width: '100%',
+                textAlign: 'center',
+              }}
             >
               Upgrade →
             </button>
           </div>
         </div>
+
         <button
           type="button"
           onClick={() => { void handleLogout() }}
-          className="mx-[18px] font-sans text-[11px] text-gray-dark hover:text-gray-mid transition-colors text-left bg-transparent border-none cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: '#444441',
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 11,
+            cursor: 'pointer',
+            textAlign: 'left',
+            padding: '6px 18px 0',
+          }}
         >
           Cerrar sesión
         </button>
