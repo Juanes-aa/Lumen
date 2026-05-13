@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
+
+from app.config import get_settings
 from groq import AsyncGroq
 from supabase import Client
 
@@ -248,10 +250,17 @@ async def send_message_stream(
             )
             yield "data: " + json.dumps({"error": "Error generando respuesta"}) + "\n\n"
 
+    origin: str = request.headers.get("origin", "")
+    allowed: list[str] = get_settings().get_cors_origins()
+    sse_headers: dict[str, str] = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    if origin in allowed:
+        sse_headers["Access-Control-Allow-Origin"] = origin
+        sse_headers["Access-Control-Allow-Credentials"] = "true"
+
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        headers=sse_headers,
     )
 
 
