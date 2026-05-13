@@ -16,10 +16,9 @@ from app.routers.analysis import router as analysis_router
 from app.routers.profile import router as profile_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.export import router as export_router
-from app.routers.tmdb import router as tmdb_router
-from app.config import get_settings, validate_critical_settings
+from app.config import get_settings
 from app.dependencies.rate_limit import limiter
-from app.dependencies.supabase import get_supabase_admin
+from app.dependencies.supabase import get_supabase_client
 from app.exceptions import register_exception_handlers
 from app.middleware import RequestIdMiddleware
 
@@ -29,15 +28,6 @@ logging.basicConfig(
 )
 
 app = FastAPI(title="Lumen API")
-
-
-@app.on_event("startup")
-def _validate_config_on_startup() -> None:
-    # Falla rápido al arrancar el servidor si falta una variable crítica.
-    # Se ejecuta cuando uvicorn dispara el lifespan; los tests con
-    # ASGITransport no levantan lifespan por defecto, así que no se ven
-    # afectados (validación cubierta por tests unitarios directos).
-    validate_critical_settings(get_settings())
 
 app.state.limiter = limiter
 
@@ -68,7 +58,7 @@ register_exception_handlers(app)
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_settings().cors_origins,
+    allow_origins=get_settings().get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,16 +71,14 @@ app.include_router(analysis_router)
 app.include_router(profile_router)
 app.include_router(recommendations_router)
 app.include_router(export_router)
-app.include_router(tmdb_router)
 
 @app.get("/health")
-async def health_check() -> dict[str, str]:
+def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
 @app.get("/health/db")
-async def health_db_check() -> dict[str, str]:
-    from app.utils.async_supabase import run_sync
-    client: Client = get_supabase_admin()
-    await run_sync(lambda: client.table("profiles").select("id").limit(1).execute())
+def health_db_check() -> dict[str, str]:
+    client: Client = get_supabase_client()
+    client.table("profiles").select("id").limit(1).execute()
     return {"status": "ok", "db": "connected"}
