@@ -22,7 +22,7 @@ export default function ChatHeader({
   const closeDisabled: boolean = messagesCount === 0 || isStreaming || isClosing
 
   return (
-    <header className="px-8 border-b-[0.4px] border-borde h-16 flex items-center gap-[14px] shrink-0">
+    <header style={{ padding: '0 32px', borderBottom: '0.4px solid #2E2D2B', height: 64, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
       <Poster
         url={session?.movie_poster_url ?? null}
         alt={session?.movie_title ?? 'Película'}

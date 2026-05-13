@@ -92,7 +92,7 @@ export default function AnalysisChatPage(): React.ReactElement {
           : null
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
       <ChatHeader
         session={session}
         messagesCount={stream.messages.length}
@@ -116,25 +116,22 @@ export default function AnalysisChatPage(): React.ReactElement {
 
       {/* Input area */}
       <div
-        className={`px-10 pt-4 pb-5 shrink-0 ${
-          stream.messages.length > 0 ? 'border-t-[0.4px] border-borde' : ''
-        }`}
+        style={{
+          padding: '16px 40px 20px',
+          flexShrink: 0,
+          borderTop: stream.messages.length > 0 ? '0.4px solid #2E2D2B' : 'none',
+        }}
       >
         {error !== null ? (
-          <p className="font-sans text-xs text-warn mb-2">{error}</p>
+          <p className="font-sans text-warn" style={{ fontSize: 12, marginBottom: 8 }}>{error}</p>
         ) : null}
 
         {isClosed ? (
-          <div className="text-center py-2">
-            <p className="font-serif italic text-base text-gray-mid">
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <p className="font-serif italic text-gray-mid" style={{ fontSize: 15 }}>
               Esta conversación está cerrada.
             </p>
-            <Button
-              className="mt-[10px]"
-              onClick={() => {
-                navigate('/library')
-              }}
-            >
+            <Button className="mt-[10px]" onClick={() => { navigate('/library') }}>
               Ir a biblioteca
             </Button>
           </div>

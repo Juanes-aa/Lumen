@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { logoutUser } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
 import LumenSymbol from './LumenSymbol'
@@ -21,6 +21,7 @@ const NAV_ITEMS: NavSpec[] = [
 export default function Sidebar(): React.ReactElement {
   const clearAuth = useAuthStore((s) => s.clearAuth)
   const navigate = useNavigate()
+  const location = useLocation()
 
   async function handleLogout(): Promise<void> {
     try {
@@ -57,16 +58,19 @@ export default function Sidebar(): React.ReactElement {
 
       {/* Nav principal */}
       <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) => `lumen-nav-item${isActive ? ' active' : ''}`}
-          >
-            {item.label}
-          </NavLink>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const forceActive: boolean = item.to === '/history' && location.pathname.startsWith('/analysis')
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => `lumen-nav-item${isActive || forceActive ? ' active' : ''}`}
+            >
+              {item.label}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* Bottom */}

@@ -41,19 +41,16 @@ export default function MessageList({
 
   if (isLoadingHistory) {
     return (
-      <div className="flex-1 overflow-y-auto px-10 py-7 flex flex-col gap-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {[0, 1].map((i) => (
-          <div
-            key={i}
-            className="h-[60px] rounded-[10px] bg-pantalla-soft border-[0.4px] border-borde animate-pulse"
-          />
+          <div key={i} className="rounded-[10px] bg-pantalla-soft border-[0.4px] border-borde animate-pulse" style={{ height: 60 }} />
         ))}
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-10 py-7 flex flex-col gap-7">
+    <div style={{ flex: 1, overflowY: 'auto', padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
       {/* Empty state with film context + suggestions */}
       {isEmpty ? (
         <div className="lumen-fade-in mt-auto pb-2">
