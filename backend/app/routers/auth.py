@@ -247,12 +247,38 @@ async def refresh(request: Request, response: Response) -> RefreshResponse:
         logger.error("auth_refresh_no_session_returned")
         raise HTTPException(status_code=500, detail="No se pudo refrescar la sesión")
 
-    # Si Supabase rota el refresh_token, lo refrescamos en la cookie.
+    # Si Supabase rota el refresh_token, lo actualizamos en la cookie.
     new_refresh: str | None = getattr(session, "refresh_token", None)
     if isinstance(new_refresh, str) and new_refresh != "":
         _set_refresh_cookie(response, new_refresh)
 
-    return RefreshResponse(access_token=session.access_token)
+    # Extraer datos del usuario de la sesión
+    user = refresh_response.user
+    user_id: str = str(user.id) if user else ""
+    email: str = str(user.email) if user and user.email else ""
+
+    # Buscar username en el perfil
+    username: str = email
+    if user_id:
+        try:
+            profile_response = await run_sync(
+                lambda: client.table("profiles")
+                .select("username")
+                .eq("id", user_id)
+                .execute()
+            )
+            raw = profile_response.data[0].get("username") if profile_response.data else None
+            if isinstance(raw, str) and raw.strip():
+                username = raw
+        except Exception:
+            pass  # No bloquear el refresh si el perfil falla
+
+    return RefreshResponse(
+        access_token=session.access_token,
+        user_id=user_id,
+        email=email,
+        username=username,
+    )
 
 
 @router.post("/logout", status_code=204)

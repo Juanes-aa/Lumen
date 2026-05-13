@@ -22,4 +22,7 @@ export interface LoginRequest {
 
 export interface RefreshResponse {
   access_token: string;
+  user_id: string;
+  email: string;
+  username: string;
 }

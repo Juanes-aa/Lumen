@@ -8,7 +8,27 @@ interface StoredUser {
   username: string;
 }
 
-const USER_KEY: string = "ct_user";
+const USER_KEY: string = "lumen_user";
+
+function readStoredUser(): StoredUser | null {
+  // Intentar localStorage primero (nuevo), luego sessionStorage (legado)
+  const sources = [
+    () => localStorage.getItem(USER_KEY),
+    () => localStorage.getItem("ct_user"),
+    () => sessionStorage.getItem("ct_user"),
+  ];
+  for (const read of sources) {
+    const raw = read();
+    if (raw !== null) {
+      try {
+        return JSON.parse(raw) as StoredUser;
+      } catch {
+        // ignorar entradas corruptas
+      }
+    }
+  }
+  return null;
+}
 
 export function useInitAuth(): { isReady: boolean } {
   const [isReady, setIsReady] = useState<boolean>(false);
@@ -16,32 +36,27 @@ export function useInitAuth(): { isReady: boolean } {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
-    const storedUserRaw: string | null = sessionStorage.getItem(USER_KEY);
-
-    let storedUser: StoredUser | null = null;
-    if (storedUserRaw !== null) {
-      try {
-        storedUser = JSON.parse(storedUserRaw) as StoredUser;
-      } catch {
-        storedUser = null;
-      }
-    }
-
-    // Siempre intentamos refresh: si la cookie HttpOnly existe, el backend
-    // devuelve un access_token nuevo. Si no, falla con 401 y limpiamos.
     refreshToken()
       .then((response) => {
-        if (storedUser !== null) {
-          setAuth(storedUser, response.access_token);
-        } else {
-          // Hay sesión válida pero perdimos el user en sessionStorage
-          // (p. ej. cerró la pestaña). Sin user no podemos hidratar el
-          // store aquí; el siguiente login resolverá.
-          clearAuth();
-        }
+        // El refresh devuelve datos del usuario: sesión completamente restaurable
+        setAuth(
+          {
+            user_id: response.user_id,
+            email: response.email,
+            username: response.username,
+          },
+          response.access_token,
+        );
       })
       .catch(() => {
-        clearAuth();
+        // Refresh falló (cookie expirada, cross-origin bloqueado, sin red…)
+        // Solo cerrar sesión si tampoco hay datos locales guardados.
+        const storedUser = readStoredUser();
+        if (storedUser === null) {
+          clearAuth();
+        }
+        // Si hay datos locales, dejamos al usuario en la app —
+        // el próximo request autenticado fallará y el interceptor lo manejará.
       })
       .finally(() => {
         setIsReady(true);

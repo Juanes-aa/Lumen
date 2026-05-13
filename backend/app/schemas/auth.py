@@ -36,3 +36,6 @@ class LoginResponse(BaseModel):
 
 class RefreshResponse(BaseModel):
     access_token: str
+    user_id: str
+    email: str
+    username: str
