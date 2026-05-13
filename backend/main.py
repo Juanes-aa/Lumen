@@ -4,8 +4,7 @@ load_dotenv()  # PRIMERO, antes de cualquier import propio
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from supabase import Client
@@ -57,14 +56,30 @@ register_exception_handlers(app)
 # RequestIdMiddleware envuelva todo (asigna request_id antes de cualquier
 # otro middleware/handler), por lo tanto se añade al final.
 app.add_middleware(SlowAPIMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=get_settings().get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.add_middleware(RequestIdMiddleware)
+
+
+@app.middleware("http")
+async def cors_middleware(request: Request, call_next):  # type: ignore[return]
+    origin: str = request.headers.get("origin", "")
+    allowed: list[str] = get_settings().get_cors_origins()
+    is_allowed: bool = origin in allowed
+
+    if request.method == "OPTIONS":
+        resp = Response(status_code=200)
+        if is_allowed:
+            resp.headers["Access-Control-Allow-Origin"] = origin
+            resp.headers["Access-Control-Allow-Credentials"] = "true"
+            resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "*"
+            resp.headers["Access-Control-Max-Age"] = "600"
+        return resp
+
+    response = await call_next(request)
+    if is_allowed:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 app.include_router(auth_router)
 app.include_router(movies_router)
