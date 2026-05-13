@@ -19,16 +19,16 @@ function formatRuntime(minutes: number | null): string {
 
 function DetailSkeleton() {
   return (
-    <div className="flex-1 px-11 py-9 overflow-y-auto">
-      <div className="h-[14px] w-[120px] bg-pantalla rounded-[4px] mb-7" />
-      <div className="flex gap-11">
-        <div className="w-[200px] h-[300px] bg-pantalla-soft border-[0.4px] border-borde rounded-[8px] shrink-0 animate-pulse" />
-        <div className="flex-1 max-w-[560px]">
-          <div className="h-9 w-[70%] bg-pantalla rounded-[4px] mb-4 animate-pulse" />
-          <div className="h-[14px] w-[50%] bg-pantalla rounded-[4px] mb-6 animate-pulse" />
-          <div className="h-[14px] w-full bg-pantalla rounded-[4px] mb-2 animate-pulse" />
-          <div className="h-[14px] w-[90%] bg-pantalla rounded-[4px] mb-2 animate-pulse" />
-          <div className="h-[14px] w-[80%] bg-pantalla rounded-[4px] animate-pulse" />
+    <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+      <div style={{ height: 14, width: 120, background: '#252421', borderRadius: 4, marginBottom: 28 }} className="animate-pulse" />
+      <div style={{ display: 'flex', gap: 44 }}>
+        <div className="bg-pantalla-soft border-[0.4px] border-borde animate-pulse" style={{ width: 200, height: 300, borderRadius: 8, flexShrink: 0 }} />
+        <div style={{ flex: 1, maxWidth: 560 }}>
+          <div style={{ height: 36, width: '70%', background: '#252421', borderRadius: 4, marginBottom: 16 }} className="animate-pulse" />
+          <div style={{ height: 14, width: '50%', background: '#252421', borderRadius: 4, marginBottom: 24 }} className="animate-pulse" />
+          <div style={{ height: 14, width: '100%', background: '#252421', borderRadius: 4, marginBottom: 8 }} className="animate-pulse" />
+          <div style={{ height: 14, width: '90%', background: '#252421', borderRadius: 4, marginBottom: 8 }} className="animate-pulse" />
+          <div style={{ height: 14, width: '80%', background: '#252421', borderRadius: 4 }} className="animate-pulse" />
         </div>
       </div>
     </div>
@@ -149,14 +149,12 @@ export default function MovieDetailPage() {
 
   if (error !== null) {
     return (
-      <div className="flex-1 px-11 py-9 overflow-y-auto">
-        <p role="alert" className="text-warn mb-4">{error}</p>
+      <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+        <p role="alert" className="font-sans text-warn" style={{ marginBottom: 16 }}>{error}</p>
         <button
           type="button"
-          className="lumen-btn-secondary sm"
-          onClick={() => {
-            navigate('/search')
-          }}
+          className="lumen-btn-secondary"
+          onClick={() => { navigate('/search') }}
         >
           ← Volver a resultados
         </button>
@@ -172,9 +170,12 @@ export default function MovieDetailPage() {
   const topCast = movie.credits.cast.slice(0, 5)
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col">
+    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       {/* Back bar */}
-      <div className="lumen-anim-1 px-11 py-[18px] border-b-[0.4px] border-borde shrink-0">
+      <div
+        className="lumen-anim-1"
+        style={{ padding: '18px 44px', borderBottom: '0.4px solid #2E2D2B', flexShrink: 0 }}
+      >
         <button
           type="button"
           onClick={() => { navigate(-1) }}
@@ -198,30 +199,34 @@ export default function MovieDetailPage() {
       </div>
 
       {/* Content */}
-      <div className="lumen-anim-2 px-11 py-9 flex gap-11 flex-wrap">
+      <div className="lumen-anim-2" style={{ padding: '36px 44px', display: 'flex', gap: 44, flexWrap: 'wrap' }}>
         {/* Poster */}
-        <div className="shrink-0">
+        <div style={{ flexShrink: 0 }}>
           <div
-            className="w-[200px] h-[300px] bg-pantalla-soft border-[0.4px] border-borde rounded-[8px] bg-cover bg-center"
-            style={posterUrl !== null ? { backgroundImage: `url(${posterUrl})` } : undefined}
+            className="bg-pantalla-soft border-[0.4px] border-borde"
+            style={{
+              width: 200, height: 300, borderRadius: 8,
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              ...(posterUrl !== null ? { backgroundImage: `url(${posterUrl})` } : {}),
+            }}
           />
         </div>
 
         {/* Info */}
-        <div className="flex-1 max-w-[560px] min-w-[280px]">
+        <div style={{ flex: 1, maxWidth: 560, minWidth: 280 }}>
           {isWatched ? (
-            <div className="inline-flex items-center gap-[6px] mb-3 bg-teal-dark border-[0.4px] border-[rgba(29,158,117,0.25)] rounded-[4px] px-[10px] py-[3px]">
-              <span className="font-mono text-[10px] text-teal tracking-[0.08em] uppercase">
+            <div className="inline-flex items-center bg-teal-dark border-[0.4px] border-[rgba(29,158,117,0.25)] rounded-[4px]" style={{ gap: 6, marginBottom: 12, padding: '3px 10px' }}>
+              <span className="font-mono text-teal" style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Ya vista
               </span>
             </div>
           ) : null}
 
-          <h2 className="font-serif text-[36px] font-medium text-celuloide tracking-[-0.02em] leading-[1.05] mb-[10px]">
+          <h2 className="font-serif text-celuloide" style={{ fontSize: 36, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.05, marginBottom: 10 }}>
             {movie.title}
           </h2>
 
-          <p className="font-mono text-[11px] text-gray-mid tracking-[0.06em] mb-5">
+          <p className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em', marginBottom: 20 }}>
             {[director ?? null, year, formatRuntime(movie.runtime)]
               .filter((v) => v !== null && v !== '')
               .join(' · ')}
@@ -234,15 +239,15 @@ export default function MovieDetailPage() {
           </p>
 
           {movie.overview ? (
-            <p className="font-sans text-[14px] text-gray-mid leading-[1.75] mb-6">
+            <p className="font-sans text-gray-mid" style={{ fontSize: 14, lineHeight: 1.75, marginBottom: 24 }}>
               {movie.overview}
             </p>
           ) : null}
 
           {topCast.length > 0 ? (
-            <div className="mb-6">
-              <p className="lumen-overline mb-[10px]">Reparto principal</p>
-              <div className="flex flex-wrap gap-[6px]">
+            <div style={{ marginBottom: 24 }}>
+              <p className="lumen-overline" style={{ marginBottom: 10 }}>Reparto principal</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {topCast.map((member) => (
                   <span key={member.id} className="lumen-tag-pill">
                     {member.name}
@@ -252,7 +257,7 @@ export default function MovieDetailPage() {
             </div>
           ) : null}
 
-          <div className="flex gap-[10px] flex-wrap items-center">
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             {!isWatched ? (
               <button
                 type="button"
@@ -273,17 +278,17 @@ export default function MovieDetailPage() {
               </button>
             ) : null}
             {isWatched && watchedMovieId === null ? (
-              <span className="font-mono text-[11px] text-gray-mid">
+              <span className="font-mono text-gray-mid" style={{ fontSize: 11 }}>
                 Sincronizando biblioteca…
               </span>
             ) : null}
           </div>
 
           {watchedMessage !== null ? (
-            <p className="mt-3 font-sans text-[12px] text-amber">{watchedMessage}</p>
+            <p className="font-sans text-amber" style={{ marginTop: 12, fontSize: 12 }}>{watchedMessage}</p>
           ) : null}
           {analysisError !== null ? (
-            <p className="mt-3 font-sans text-[12px] text-warn">{analysisError}</p>
+            <p className="font-sans text-warn" style={{ marginTop: 12, fontSize: 12 }}>{analysisError}</p>
           ) : null}
         </div>
       </div>
