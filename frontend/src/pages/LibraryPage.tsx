@@ -165,14 +165,11 @@ export default function LibraryPage(): React.ReactElement {
 
   if (isLoading && movies.length === 0) {
     return (
-      <div className="flex-1 px-11 py-9 overflow-y-auto">
-        <div className="h-8 w-[200px] bg-pantalla rounded-[4px] mb-6 animate-pulse" />
-        <div className="grid grid-cols-5 gap-3">
+      <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+        <div style={{ height: 32, width: 200, background: '#252421', borderRadius: 4, marginBottom: 24 }} className="animate-pulse" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-            <div
-              key={i}
-              className="aspect-[2/3] bg-pantalla-soft border-[0.4px] border-borde rounded-[10px] animate-pulse"
-            />
+            <div key={i} className="aspect-[2/3] bg-pantalla-soft border-[0.4px] border-borde rounded-[10px] animate-pulse" />
           ))}
         </div>
       </div>
@@ -181,25 +178,19 @@ export default function LibraryPage(): React.ReactElement {
 
   if (error !== null) {
     return (
-      <div className="flex-1 px-11 py-9">
-        <p role="alert" className="text-warn">
-          {error}
-        </p>
+      <div style={{ flex: 1, padding: '36px 44px' }}>
+        <p role="alert" className="font-sans text-warn">{error}</p>
       </div>
     )
   }
 
   if (movies.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-10 py-[60px] gap-5">
-        <p className="font-serif italic text-[22px] text-celuloide text-center max-w-[420px] leading-[1.4]">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 44px', gap: 20 }}>
+        <p className="font-serif italic text-celuloide" style={{ fontSize: 22, textAlign: 'center', maxWidth: 420, lineHeight: 1.4 }}>
           Tu biblioteca empieza con la primera película que viste con intención.
         </p>
-        <Button
-          onClick={() => {
-            navigate('/search')
-          }}
-        >
+        <Button onClick={() => { navigate('/search') }}>
           Explorar películas
         </Button>
       </div>
@@ -207,93 +198,74 @@ export default function LibraryPage(): React.ReactElement {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="lumen-anim-1 px-11 pt-9 shrink-0">
-        <div className="flex justify-between items-end mb-5">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      {/* Header + filtros */}
+      <div className="lumen-anim-1" style={{ padding: '36px 44px 0', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
           <div>
-            <h1 className="font-serif text-[30px] font-medium text-celuloide tracking-[-0.02em] mb-[5px]">
+            <h1 className="font-serif text-celuloide" style={{ fontSize: 30, fontWeight: 500, letterSpacing: '-0.02em', marginBottom: 5 }}>
               Mis películas
             </h1>
-            <p className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">
+            <p className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
               {movies.length} película{movies.length === 1 ? '' : 's'} · {analyzedCount} analizada
               {analyzedCount === 1 ? '' : 's'}
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              navigate('/search')
-            }}
-          >
+          <Button size="sm" onClick={() => { navigate('/search') }}>
             + Agregar película
           </Button>
         </div>
 
-        <div className="lumen-anim-2 flex gap-5 pb-[18px] border-b-[0.4px] border-borde flex-wrap items-center">
+        <div className="lumen-anim-2" style={{ display: 'flex', gap: 20, paddingBottom: 18, borderBottom: '0.4px solid #2E2D2B', flexWrap: 'wrap', alignItems: 'center' }}>
           {presentGenres.length > 0 ? (
-            <div className="flex gap-[6px] flex-wrap">
-              <FilterChip
-                label="Todos"
-                active={activeGenre === null}
-                onClick={() => {
-                  setActiveGenre(null)
-                }}
-              />
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <FilterChip label="Todos" active={activeGenre === null} onClick={() => { setActiveGenre(null) }} />
               {presentGenres.map((g) => (
                 <FilterChip
                   key={g.id}
                   label={g.name}
                   active={activeGenre === g.id}
-                  onClick={() => {
-                    setActiveGenre(activeGenre === g.id ? null : g.id)
-                  }}
+                  onClick={() => { setActiveGenre(activeGenre === g.id ? null : g.id) }}
                 />
               ))}
             </div>
           ) : null}
 
           {presentGenres.length > 0 ? (
-            <div className="w-[0.4px] h-[18px] bg-borde shrink-0" aria-hidden="true" />
+            <div style={{ width: '0.4px', height: 18, background: '#2E2D2B', flexShrink: 0 }} aria-hidden="true" />
           ) : null}
 
-          <div className="flex gap-[6px]">
+          <div style={{ display: 'flex', gap: 6 }}>
             {(['Todos', 'Con análisis', 'Sin análisis'] as AnalysisFilter[]).map((f) => (
-              <FilterChip
-                key={f}
-                label={f}
-                active={analysisFilter === f}
-                onClick={() => {
-                  setAnalysisFilter(f)
-                }}
-              />
+              <FilterChip key={f} label={f} active={analysisFilter === f} onClick={() => { setAnalysisFilter(f) }} />
             ))}
           </div>
 
           {filtersAreActive ? (
-            <span className="font-mono text-[10px] text-gray-mid ml-auto">
+            <span className="font-mono text-gray-mid" style={{ fontSize: 10, marginLeft: 'auto' }}>
               {filtered.length} resultado{filtered.length === 1 ? '' : 's'}
             </span>
           ) : null}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-11 pt-6 pb-12">
+      {/* Grid */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 44px 48px' }}>
         {filtered.length === 0 ? (
-          <div className="pt-12">
-            <p className="font-serif italic text-lg text-gray-mid">
+          <div style={{ paddingTop: 48 }}>
+            <p className="font-serif italic text-gray-mid" style={{ fontSize: 18 }}>
               Ninguna película coincide con los filtros seleccionados.
             </p>
           </div>
         ) : (
-          <div className="lumen-anim-3 grid grid-cols-5 gap-3">
+          <div className="lumen-anim-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
             {filtered.map((m) => (
               <MovieCard
                 key={m.id}
                 movie={m}
                 hasAnalysis={analyzedMovieIds.has(m.id)}
-                onDelete={() => {
-                  handleDelete(m)
-                }}
+                onDelete={() => { handleDelete(m) }}
               />
             ))}
           </div>
