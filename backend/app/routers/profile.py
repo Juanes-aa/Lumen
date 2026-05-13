@@ -72,11 +72,11 @@ async def get_preferences(
 ) -> PreferencesResponse:
     row = await profile_repo.get_preferences_row(supabase, user_id)
     if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Preferencias no encontradas",
+        return PreferencesResponse(
+            user_id=user_id,
+            favorite_genres=[],
+            reference_directors=[],
         )
-    # jsonb: ya son listas Python.
     favorite_genres: list[str] = get_list_str(row, "favorite_genres")
     reference_directors: list[str] = get_list_str(row, "reference_directors")
     return PreferencesResponse(
@@ -112,10 +112,7 @@ async def get_instructions(
 ) -> InstructionsResponse:
     row = await profile_repo.get_instructions_row(supabase, user_id)
     if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Instrucciones no encontradas",
-        )
+        return InstructionsResponse(user_id=user_id, instructions="")
     instructions: str = get_str(row, "instructions", "")
     return InstructionsResponse(user_id=user_id, instructions=instructions)
 

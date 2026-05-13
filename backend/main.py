@@ -16,6 +16,7 @@ from app.routers.analysis import router as analysis_router
 from app.routers.profile import router as profile_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.export import router as export_router
+from app.routers.tmdb import router as tmdb_router
 from app.config import get_settings
 from app.dependencies.rate_limit import limiter
 from app.dependencies.supabase import get_supabase_admin
@@ -71,6 +72,7 @@ app.include_router(analysis_router)
 app.include_router(profile_router)
 app.include_router(recommendations_router)
 app.include_router(export_router)
+app.include_router(tmdb_router)
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
