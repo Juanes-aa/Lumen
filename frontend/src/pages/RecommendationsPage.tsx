@@ -17,15 +17,19 @@ interface RecCardProps {
 
 function RecCard({ rec, onDismiss }: RecCardProps): React.ReactElement {
   return (
-    <article className="flex flex-col bg-pantalla border-[0.4px] border-borde rounded-[10px] overflow-hidden transition-colors hover:border-borde-soft">
+    <article className="flex flex-col bg-pantalla border-[0.4px] border-borde rounded-[10px] overflow-hidden cursor-pointer transition-[border-color,transform] hover:border-borde-soft hover:-translate-y-[2px]">
       <div className="border-b-[0.4px] border-borde">
         <Poster url={rec.poster_url} alt={rec.title} fluid rounded="none" />
       </div>
       <div className="px-4 pt-4 pb-[14px] flex flex-col gap-3 flex-1">
-        <p className="font-serif text-lg font-medium text-celuloide leading-[1.15] tracking-[-0.01em]">
-          {rec.title}
-        </p>
+        {/* Title + meta */}
+        <div>
+          <p className="font-serif text-[18px] font-medium text-celuloide leading-[1.15] tracking-[-0.01em] mb-1">
+            {rec.title}
+          </p>
+        </div>
 
+        {/* Reason */}
         <div>
           <p className="font-mono text-[9.5px] text-amber tracking-[0.16em] uppercase mb-[7px]">
             Por qué para ti
@@ -46,8 +50,11 @@ function RecCard({ rec, onDismiss }: RecCardProps): React.ReactElement {
         <div className="mt-auto pt-[6px] border-t-[0.4px] border-borde">
           <button
             type="button"
-            onClick={onDismiss}
-            className="bg-transparent border-none text-gray-soft font-sans text-[11px] cursor-pointer py-1 transition-colors hover:text-warn focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDismiss()
+            }}
+            className="bg-transparent border-none text-gray-dark font-sans text-[11px] cursor-pointer py-1 transition-colors text-left hover:text-gray-mid focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
             aria-label={`Descartar recomendación: ${rec.title}`}
           >
             No me interesa
@@ -164,7 +171,7 @@ export default function RecommendationsPage(): React.ReactElement {
     return (
       <div className="flex-1 px-11 py-9 overflow-y-auto">
         <div className="h-9 w-[220px] bg-pantalla rounded-[4px] mb-7 animate-pulse" />
-        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
+        <div className="grid gap-4 grid-cols-3">
           {[0, 1, 2].map((i) => (
             <CardSkeleton key={i} />
           ))}
@@ -175,22 +182,24 @@ export default function RecommendationsPage(): React.ReactElement {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="lumen-anim-1 px-11 pt-9 pb-6 shrink-0">
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="font-serif text-[30px] font-medium text-celuloide tracking-[-0.02em] mb-[5px]">
-              Recomendaciones
-            </h1>
-            <p className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">
-              {activeRecs.length === 0
-                ? 'Sin recomendaciones activas'
-                : `${activeRecs.length.toString()} ${activeRecs.length === 1 ? 'sugerencia' : 'sugerencias'} para ti`}
-            </p>
-          </div>
+      <div className="lumen-anim-1 px-11 pt-10 pb-0 shrink-0">
+        <p className="lumen-overline mb-2">Basado en cómo piensas</p>
+        <h1 className="font-serif text-[32px] font-medium text-celuloide tracking-[-0.02em] leading-[1.1] mb-2">
+          Lo que viene después
+        </h1>
+        <p className="font-sans text-[13.5px] text-gray-mid leading-[1.6] max-w-[540px] mb-6">
+          No porque otros lo vieron. Porque tú, específicamente, estás listo para esto.
+        </p>
+        <div className="lumen-anim-2 flex gap-2 mb-8 flex-wrap items-center">
           {activeRecs.length > 0 ? (
             <Button variant="secondary" size="sm" onClick={handleGenerate} disabled={generating}>
               {generating ? 'Generando…' : 'Generar nuevas'}
             </Button>
+          ) : null}
+          {activeRecs.length > 0 ? (
+            <span className="font-mono text-[10px] text-gray-mid ml-2">
+              {activeRecs.length} película{activeRecs.length !== 1 ? 's' : ''}
+            </span>
           ) : null}
         </div>
       </div>
@@ -223,15 +232,15 @@ export default function RecommendationsPage(): React.ReactElement {
         ) : null}
 
         {generating && activeRecs.length === 0 ? (
-          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
-            {[0, 1, 2, 3, 4].map((i) => (
+          <div className="grid gap-4 grid-cols-3">
+            {[0, 1, 2].map((i) => (
               <CardSkeleton key={i} />
             ))}
           </div>
         ) : null}
 
         {activeRecs.length > 0 ? (
-          <div className="lumen-anim-2 grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
+          <div className="lumen-anim-2 grid gap-4 grid-cols-3">
             {activeRecs.map((rec) => (
               <RecCard
                 key={rec.id}

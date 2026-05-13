@@ -62,37 +62,43 @@ interface MovieCardProps {
   onDelete: () => void
 }
 
-function MovieCard({ movie, hasAnalysis, onDelete }: MovieCardProps): React.ReactElement {
+function MovieCard({ movie, hasAnalysis, onDelete: _onDelete }: MovieCardProps): React.ReactElement {
   return (
-    <div className="group bg-pantalla border-[0.4px] border-borde rounded-[10px] overflow-hidden cursor-pointer transition-colors relative flex flex-col hover:border-borde-soft">
-      <Link to={`/movie/${movie.tmdb_id.toString()}`} className="block relative">
-        <div className="border-b-[0.4px] border-borde">
+    <div className="group bg-pantalla border-[0.4px] border-borde rounded-[8px] overflow-hidden cursor-pointer transition-colors relative flex flex-col hover:border-borde-soft">
+      <div className="relative">
+        <Link to={`/movie/${movie.tmdb_id.toString()}`} className="block">
           <Poster url={movie.poster_url} alt={movie.title} fluid rounded="none" />
-        </div>
+        </Link>
         {hasAnalysis ? (
-          <span className="absolute top-[7px] right-[7px] bg-teal-dark border-[0.4px] border-[rgba(29,158,117,0.31)] rounded-[4px] text-teal font-mono text-[9px] px-[6px] py-[2px] tracking-[0.07em] uppercase">
+          <span className="absolute top-[7px] right-[7px] bg-teal-dark border-[0.4px] border-[rgba(29,158,117,0.31)] rounded-[4px] text-teal font-mono text-[9px] px-[6px] py-[2px] tracking-[0.07em] uppercase z-10">
             Analizada
           </span>
         ) : null}
-      </Link>
-      <div className="px-[11px] pt-[10px] pb-3 flex-1 flex flex-col">
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-[rgba(15,14,13,0.82)] flex flex-col items-center justify-end px-3 pb-[14px] gap-[7px] opacity-0 transition-opacity group-hover:opacity-100 rounded-[6px_6px_0_0]">
+          {hasAnalysis ? (
+            <Link
+              to={`/movie/${movie.tmdb_id.toString()}`}
+              className="w-full rounded-[5px] bg-transparent border-[0.4px] border-[#3A3937] text-celuloide font-sans text-[11px] font-medium py-[7px] text-center transition-opacity hover:opacity-85"
+            >
+              Ver análisis
+            </Link>
+          ) : null}
+          <Link
+            to={`/movie/${movie.tmdb_id.toString()}`}
+            className="w-full rounded-[5px] bg-amber border-none text-amber-dark font-sans text-[11px] font-medium py-[7px] text-center transition-opacity hover:opacity-85"
+          >
+            {hasAnalysis ? 'Nueva sesión' : 'Analizar ahora'}
+          </Link>
+        </div>
+      </div>
+      <div className="px-[11px] pt-[10px] pb-3">
         <p className="font-serif text-[13.5px] font-medium text-celuloide leading-[1.2] mb-[3px] overflow-hidden line-clamp-2">
           {movie.title}
         </p>
         <p className="font-mono text-[9.5px] text-gray-mid tracking-[0.04em]">
           {movie.release_year ?? '—'}
         </p>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-          className="bg-transparent border-none text-gray-dark font-sans text-[10.5px] p-0 mt-2 cursor-pointer text-left self-start opacity-0 transition-[opacity,color] group-hover:opacity-100 hover:text-warn focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
-          aria-label={`Eliminar ${movie.title} de la biblioteca`}
-        >
-          Eliminar
-        </button>
       </div>
     </div>
   )

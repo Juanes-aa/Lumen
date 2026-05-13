@@ -19,7 +19,7 @@ function SearchResultCard({ movie, onClick }: SearchResultCardProps): React.Reac
     <button
       type="button"
       onClick={onClick}
-      className="bg-pantalla border-[0.4px] border-borde rounded-[10px] cursor-pointer text-left flex flex-col overflow-hidden transition-colors hover:border-borde-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+      className="bg-pantalla border-[0.4px] border-borde rounded-[8px] cursor-pointer text-left flex flex-col overflow-hidden transition-[border-color,transform] hover:border-amber hover:-translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
     >
       <div className="border-b-[0.4px] border-borde">
         <Poster url={posterUrl} alt={movie.title} fluid rounded="none" />
@@ -118,24 +118,31 @@ export default function SearchPage(): React.ReactElement {
         ) : null}
 
         {isLoading ? (
-          <div className="grid grid-cols-5 gap-3">
-            {[0, 1, 2, 3, 4].map((i) => (
+          <div className="grid grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : null}
 
         {!isLoading && error === null && results.length > 0 ? (
-          <div className="lumen-anim-2 grid grid-cols-5 gap-3">
-            {results.map((movie) => (
-              <SearchResultCard
-                key={movie.id}
-                movie={movie}
-                onClick={() => {
-                  navigate(`/movie/${movie.id.toString()}`)
-                }}
-              />
-            ))}
+          <div className="lumen-anim-2">
+            <div className="flex justify-between items-center mb-5">
+              <span className="font-mono text-[10px] text-gray-mid tracking-[0.06em]">
+                {results.length} resultado{results.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {results.map((movie) => (
+                <SearchResultCard
+                  key={movie.id}
+                  movie={movie}
+                  onClick={() => {
+                    navigate(`/movie/${movie.id.toString()}`)
+                  }}
+                />
+              ))}
+            </div>
           </div>
         ) : null}
 
@@ -151,12 +158,9 @@ export default function SearchPage(): React.ReactElement {
         ) : null}
 
         {tooShort && error === null && !isLoading ? (
-          <div className="text-center px-5 pt-20 pb-10">
-            <p className="font-serif italic text-[22px] font-normal text-celuloide leading-[1.4] mb-[14px] max-w-[480px] mx-auto">
-              Empieza por una película que aún no termina de cerrarse en tu cabeza.
-            </p>
-            <p className="font-sans text-[13px] text-gray-mid">
-              Lumen funciona mejor con películas que te dejaron preguntas.
+          <div className="lumen-anim-1 mt-7">
+            <p className="font-serif italic text-[22px] font-normal text-celuloide leading-[1.3] mb-7 max-w-[500px]">
+              Empieza por el título. O por lo que todavía estás procesando.
             </p>
           </div>
         ) : null}

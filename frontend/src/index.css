@@ -46,6 +46,7 @@ body {
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow: hidden;
 }
 
 ::-webkit-scrollbar {
@@ -140,6 +141,9 @@ input:focus {
 }
 .lumen-anim-5 {
   animation: lumen-fade-in-up 0.3s ease 0.28s both;
+}
+.lumen-anim-6 {
+  animation: lumen-fade-in-up 0.3s ease 0.34s both;
 }
 .lumen-fade-in {
   animation: lumen-fade-in 0.4s ease both;
