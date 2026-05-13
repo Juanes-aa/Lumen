@@ -1,20 +1,28 @@
 import { useNavigate } from 'react-router-dom'
-import Button from '../../components/ui/Button'
 
 export default function EmptyDashboard(): React.ReactElement {
   const navigate = useNavigate()
   return (
-    <div className="bg-pantalla-soft border-[0.4px] border-borde rounded-[10px] px-6 py-8 text-center">
-      <p className="font-serif italic text-celuloide text-lg leading-snug mb-3">
+    <div
+      className="flex flex-col items-center justify-center text-center"
+      style={{
+        background: '#1E1D1B',
+        border: '0.4px solid #2E2D2B',
+        borderRadius: 10,
+        padding: '48px 32px',
+        minHeight: 200,
+      }}
+    >
+      <p className="font-serif italic text-celuloide" style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 20, maxWidth: 340 }}>
         Tu biblioteca empieza con la primera película que viste con intención.
       </p>
-      <Button
-        onClick={() => {
-          navigate('/search')
-        }}
+      <button
+        type="button"
+        className="lumen-btn-primary"
+        onClick={() => { navigate('/search') }}
       >
         Buscar una película
-      </Button>
+      </button>
     </div>
   )
 }

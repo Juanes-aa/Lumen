@@ -106,7 +106,6 @@ export default function DashboardPage(): React.ReactElement | null {
     return movie?.release_year ?? null
   }, [activeSession, movies])
 
-  // Show top 2 profile tags as amber chips when the session has tags
   const activeSessionTags: string[] = useMemo(() => {
     if (activeSession === null || !activeSession.has_tags) return []
     return (profileQuery.data?.temas_frecuentes ?? []).slice(0, 2).map((t) => t.value)
@@ -115,17 +114,18 @@ export default function DashboardPage(): React.ReactElement | null {
   if (token === null) return null
 
   return (
-    <div className="flex-1 flex min-w-0 overflow-hidden">
-      {/* Main column */}
-      <div className="flex-1 overflow-y-auto px-10 py-10 pl-11">
+    <div style={{ display: 'flex', flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
 
-        {/* Welcome */}
-        <div className="lumen-anim-1 mb-9">
-          <p className="lumen-overline mb-2">{greeting()}</p>
-          <h1 className="font-serif text-[32px] font-medium text-celuloide leading-[1.1] tracking-[-0.02em] mb-2">
+      {/* ── Columna principal ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '40px 40px 40px 44px' }}>
+
+        {/* Bienvenida */}
+        <div className="lumen-anim-1" style={{ marginBottom: 36 }}>
+          <p className="lumen-overline" style={{ marginBottom: 8 }}>{greeting()}</p>
+          <h1 className="font-serif text-celuloide" style={{ fontSize: 32, fontWeight: 500, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 8 }}>
             ¿Qué estás procesando hoy?
           </h1>
-          <p className="font-sans text-[13px] text-gray-mid leading-relaxed">
+          <p className="font-sans text-gray-mid" style={{ fontSize: 13, lineHeight: 1.6 }}>
             {lastClosedSession !== null ? (
               <>
                 Última sesión {relativeTime(lastClosedSession.closed_at)} ·{' '}
@@ -137,10 +137,10 @@ export default function DashboardPage(): React.ReactElement | null {
           </p>
         </div>
 
-        {/* Active analysis */}
+        {/* Análisis activo */}
         {activeSession !== null ? (
-          <div className="lumen-anim-2 mb-9">
-            <p className="lumen-overline mb-3 tracking-[0.16em]">Análisis en curso</p>
+          <div className="lumen-anim-2" style={{ marginBottom: 36 }}>
+            <p className="lumen-overline" style={{ marginBottom: 12 }}>Análisis en curso</p>
             <ActiveSessionCard
               session={activeSession}
               releaseYear={activeMovieYear}
@@ -150,14 +150,14 @@ export default function DashboardPage(): React.ReactElement | null {
           </div>
         ) : null}
 
-        {/* Recent movies */}
+        {/* Recientes */}
         <RecentMoviesRow />
       </div>
 
-      {/* Right panel */}
-      <aside className="w-[260px] shrink-0 border-l-[0.4px] border-borde px-6 py-10 overflow-y-auto flex flex-col gap-8">
+      {/* ── Panel derecho ── */}
+      <aside style={{ width: 260, flexShrink: 0, borderLeft: '0.4px solid #2E2D2B', padding: '40px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
         <ProgressCard />
-        <div className="border-t-[0.4px] border-borde" />
+        <div style={{ borderTop: '0.4px solid #2E2D2B' }} />
         <RecommendationsTeaser />
       </aside>
     </div>
