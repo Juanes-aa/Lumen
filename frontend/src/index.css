@@ -418,6 +418,103 @@ input:focus {
   padding: 7px 14px;
 }
 
+/* ─── Auth screens ─── */
+.lumen-auth-bg {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #0F0E0D;
+  background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(250, 199, 117, 0.07) 0%, transparent 65%);
+}
+
+.lumen-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(26, 25, 23, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(250, 199, 117, 0.1);
+  border-radius: 16px;
+  padding: 44px 40px 36px;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.5),
+    0 32px 72px rgba(0, 0, 0, 0.6),
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(250, 199, 117, 0.05);
+}
+
+@media (max-width: 480px) {
+  .lumen-auth-card {
+    padding: 36px 28px 28px;
+  }
+}
+
+.lumen-auth-divider {
+  height: 0.5px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(46, 45, 43, 0.9) 25%,
+    rgba(46, 45, 43, 0.9) 75%,
+    transparent 100%
+  );
+}
+
+.lumen-input-auth {
+  background: rgba(15, 14, 13, 0.8);
+  border: 0.5px solid #2E2D2B;
+  border-radius: 8px;
+  color: #FAF9F6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 12px 14px;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lumen-input-auth:focus {
+  outline: none;
+  border-color: rgba(250, 199, 117, 0.45);
+  box-shadow: 0 0 0 3px rgba(250, 199, 117, 0.07);
+}
+.lumen-input-auth::placeholder {
+  color: #3A3937;
+}
+
+.lumen-btn-auth {
+  width: 100%;
+  background: linear-gradient(150deg, #FAC775 0%, #F5B84E 100%);
+  border: none;
+  border-radius: 8px;
+  color: #2C1800;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 13px 18px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 14px rgba(250, 199, 117, 0.18);
+}
+.lumen-btn-auth:hover:not(:disabled) {
+  opacity: 0.93;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(250, 199, 117, 0.22);
+}
+.lumen-btn-auth:active:not(:disabled) {
+  transform: translateY(0px);
+  box-shadow: 0 1px 8px rgba(250, 199, 117, 0.15);
+  opacity: 0.88;
+}
+.lumen-btn-auth:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* ─── Reduced motion: neutralizar animaciones y transiciones globalmente ─── */
 @media (prefers-reduced-motion: reduce) {
   *,

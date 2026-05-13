@@ -43,81 +43,78 @@ export default function RegisterPage(): React.ReactElement {
       )
       navigate('/')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado')
+      setError(err instanceof Error ? err.message : 'Algo falló. El intento no se perdió — prueba de nuevo.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const inputCls: string =
-    'lumen-input focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
-
   return (
-    <div className="h-screen bg-sala flex items-center justify-center p-4">
-      <div className="lumen-anim-1 w-full max-w-[420px] bg-pantalla border-[0.5px] border-borde-soft rounded-xl px-8 py-9 shadow-[0_8px_48px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center justify-center gap-[10px] mb-6">
-          <LumenSymbol size={28} />
-          <span className="font-serif text-[28px] font-medium text-celuloide tracking-[-0.02em]">
+    <div className="lumen-auth-bg">
+      <div className="lumen-auth-card lumen-anim-1">
+
+        {/* ── Marca ── */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <LumenSymbol size={30} />
+          <span className="font-serif text-[32px] font-medium text-celuloide tracking-[-0.02em] leading-none">
             Lumen
           </span>
         </div>
 
-        <h1 className="font-serif italic text-lg font-normal text-gray-mid text-center leading-[1.4] mb-7">
-          Empieza a construir tu perfil cinematográfico.
-        </h1>
+        {/* ── Tagline ── */}
+        <p className="font-serif italic text-[18px] text-center leading-[1.55] mb-7 px-1"
+          style={{ color: 'rgba(250, 249, 246, 0.6)' }}>
+          La primera película que analices<br />ya cambia el perfil.
+        </p>
 
+        {/* ── Divisor ── */}
+        <div className="lumen-auth-divider mb-7" />
+
+        {/* ── Formulario ── */}
         <form
-          onSubmit={(e) => {
-            void handleSubmit(e)
-          }}
-          className="flex flex-col gap-4"
+          onSubmit={(e) => { void handleSubmit(e) }}
+          className="flex flex-col gap-[18px]"
         >
-          <div>
-            <label htmlFor="email" className="lumen-overline mb-[6px]">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className="lumen-overline">
               Email
             </label>
             <input
               id="email"
               type="email"
-              className={inputCls}
+              className="lumen-input-auth"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value)
-              }}
+              onChange={(e) => { setEmail(e.target.value) }}
               placeholder="tu@email.com"
               autoComplete="email"
             />
           </div>
 
-          <div>
-            <label htmlFor="username" className="lumen-overline mb-[6px]">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="username" className="lumen-overline">
               Nombre de usuario
             </label>
             <input
               id="username"
               type="text"
-              className={inputCls}
+              className="lumen-input-auth"
               value={username}
-              onChange={(e) => {
-                setUsername(e.target.value)
-              }}
+              onChange={(e) => { setUsername(e.target.value) }}
               placeholder="usuario123"
               autoComplete="username"
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="lumen-overline mb-[6px]">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="password" className="lumen-overline">
               Contraseña
             </label>
             <input
               id="password"
               type="password"
-              className={inputCls}
+              className="lumen-input-auth"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value)
-              }}
+              onChange={(e) => { setPassword(e.target.value) }}
               placeholder="Mínimo 8 caracteres"
               autoComplete="new-password"
             />
@@ -126,7 +123,7 @@ export default function RegisterPage(): React.ReactElement {
           {error !== null ? (
             <p
               role="alert"
-              className="font-sans text-[12.5px] text-warn bg-[rgba(226,75,74,0.08)] border-[0.4px] border-[rgba(226,75,74,0.25)] rounded-md px-3 py-2"
+              className="font-sans text-[12.5px] text-warn bg-[rgba(226,75,74,0.08)] border-[0.4px] border-[rgba(226,75,74,0.25)] rounded-md px-3 py-2.5 leading-[1.5]"
             >
               {error}
             </p>
@@ -134,22 +131,26 @@ export default function RegisterPage(): React.ReactElement {
 
           <button
             type="submit"
-            className="lumen-btn-primary w-full text-center mt-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+            className="lumen-btn-auth mt-1"
             disabled={isLoading}
           >
             {isLoading ? 'Creando cuenta…' : 'Crear cuenta'}
           </button>
         </form>
 
-        <p className="mt-6 text-center font-sans text-[12.5px] text-gray-mid">
-          ¿Ya tienes cuenta?{' '}
-          <Link
-            to="/login"
-            className="text-amber no-underline hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
-          >
-            Inicia sesión
-          </Link>
-        </p>
+        {/* ── Footer ── */}
+        <div className="mt-7 pt-5 border-t border-[rgba(46,45,43,0.5)]">
+          <p className="text-center font-sans text-[13px] text-gray-mid">
+            ¿Ya tienes cuenta?{' '}
+            <Link
+              to="/login"
+              className="text-amber no-underline hover:opacity-75 transition-opacity duration-150"
+            >
+              Inicia sesión
+            </Link>
+          </p>
+        </div>
+
       </div>
     </div>
   )
