@@ -217,7 +217,7 @@ export default function LibraryPage(): React.ReactElement {
           </Button>
         </div>
 
-        <div className="lumen-anim-2" style={{ display: 'flex', gap: 20, paddingBottom: 18, borderBottom: '0.4px solid #2E2D2B', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="lumen-anim-2" style={{ display: 'flex', gap: 20, paddingTop: 14, paddingBottom: 20, borderBottom: '0.4px solid #2E2D2B', flexWrap: 'wrap', alignItems: 'center' }}>
           {presentGenres.length > 0 ? (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <FilterChip label="Todos" active={activeGenre === null} onClick={() => { setActiveGenre(null) }} />
