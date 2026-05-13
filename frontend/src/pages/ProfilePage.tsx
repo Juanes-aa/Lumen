@@ -18,28 +18,23 @@ interface StatsRowProps {
   topicsCount: number
 }
 
-function StatsRow({
-  moviesCount,
-  totalAnalyzed,
-  activeSessionsCount,
-  topicsCount,
-}: StatsRowProps): React.ReactElement {
-  const stats: { label: string; value: number }[] = [
+function StatsRow({ moviesCount, totalAnalyzed, activeSessionsCount, topicsCount }: StatsRowProps): React.ReactElement {
+  const stats = [
     { label: 'Películas vistas', value: moviesCount },
     { label: 'Análisis cerrados', value: totalAnalyzed },
     { label: 'Sesiones activas', value: activeSessionsCount },
     { label: 'Temas explorados', value: topicsCount },
   ]
   return (
-    <section className="lumen-anim-4 lumen-section bg-pantalla-soft">
-      <span className="lumen-overline mb-4">Actividad</span>
-      <div className="grid grid-cols-2 gap-4">
+    <section className="lumen-anim-4 lumen-section" style={{ background: '#1E1D1B' }}>
+      <span className="lumen-overline" style={{ display: 'block', marginBottom: 16 }}>Actividad</span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {stats.map((stat) => (
           <div key={stat.label}>
-            <p className="font-serif text-[28px] font-normal text-celuloide leading-none">
+            <p className="font-serif text-celuloide" style={{ fontSize: 28, fontWeight: 400, lineHeight: 1 }}>
               {stat.value}
             </p>
-            <p className="font-mono text-[10px] text-gray-mid tracking-[0.06em] mt-1">
+            <p className="font-mono text-gray-mid" style={{ fontSize: 10, letterSpacing: '0.06em', marginTop: 4 }}>
               {stat.label}
             </p>
           </div>
@@ -51,25 +46,17 @@ function StatsRow({
 
 function ProfileSkeleton(): React.ReactElement {
   return (
-    <div className="flex-1 px-11 py-9 overflow-y-auto">
-      <div className="h-8 w-[200px] bg-pantalla rounded-[4px] mb-7 animate-pulse" />
-      <div className="flex gap-6">
-        <div className="basis-3/5 grow-0 shrink-0 flex flex-col gap-[18px]">
+    <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+      <div style={{ height: 32, width: 200, background: '#252421', borderRadius: 4, marginBottom: 28 }} className="animate-pulse" />
+      <div style={{ display: 'flex', gap: 24 }}>
+        <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {[200, 200, 180].map((h, i) => (
-            <div
-              key={i}
-              className="bg-pantalla rounded-[10px] animate-pulse"
-              style={{ height: h }}
-            />
+            <div key={i} style={{ height: h, background: '#252421', borderRadius: 10 }} className="animate-pulse" />
           ))}
         </div>
-        <div className="basis-2/5 grow-0 shrink-0 flex flex-col gap-[18px]">
+        <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {[180, 140, 140].map((h, i) => (
-            <div
-              key={i}
-              className="bg-pantalla rounded-[10px] animate-pulse"
-              style={{ height: h }}
-            />
+            <div key={i} style={{ height: h, background: '#252421', borderRadius: 10 }} className="animate-pulse" />
           ))}
         </div>
       </div>
@@ -81,68 +68,60 @@ export default function ProfilePage(): React.ReactElement {
   const profileQuery = useSemanticProfileQuery()
   const sessionsQuery = useSessionsQuery()
   const moviesQuery = useWatchedMoviesQuery()
-  // Triggered for cache priming so the sub-sections paint together
   useMemoryNotesQuery()
 
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | null>(null)
 
   function showToast(message: string): void {
-    if (toastTimer.current !== null) {
-      window.clearTimeout(toastTimer.current)
-    }
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current)
     setToast(message)
-    toastTimer.current = window.setTimeout(() => {
-      setToast(null)
-    }, 2200)
+    toastTimer.current = window.setTimeout(() => { setToast(null) }, 2200)
   }
 
   useEffect(() => {
     return () => {
-      if (toastTimer.current !== null) {
-        window.clearTimeout(toastTimer.current)
-      }
+      if (toastTimer.current !== null) window.clearTimeout(toastTimer.current)
     }
   }, [])
 
-  const initialLoading: boolean =
-    profileQuery.isPending || sessionsQuery.isPending || moviesQuery.isPending
-
-  if (initialLoading) {
-    return <ProfileSkeleton />
-  }
+  const initialLoading = profileQuery.isPending || sessionsQuery.isPending || moviesQuery.isPending
+  if (initialLoading) return <ProfileSkeleton />
 
   const profile = profileQuery.data ?? null
   const sessions = sessionsQuery.data ?? []
-  const moviesCount: number = (moviesQuery.data ?? []).length
-  const totalAnalyzed: number = profile?.total_sesiones_analizadas ?? 0
-  const activeSessionsCount: number = sessions.filter((s) => s.status === 'active').length
-  const topicsCount: number = (profile?.temas_frecuentes ?? []).length
+  const moviesCount = (moviesQuery.data ?? []).length
+  const totalAnalyzed = profile?.total_sesiones_analizadas ?? 0
+  const activeSessionsCount = sessions.filter((s) => s.status === 'active').length
+  const topicsCount = (profile?.temas_frecuentes ?? []).length
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col">
-      {/* Header */}
-      <header className="lumen-anim-1 px-11 pt-9 pb-7 shrink-0">
-        <h1 className="font-serif text-[32px] font-medium text-celuloide tracking-[-0.02em] mb-[6px]">
+    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── Header ── */}
+      <header className="lumen-anim-1" style={{ padding: '36px 44px 28px', flexShrink: 0 }}>
+        <h1 className="font-serif text-celuloide" style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.02em', marginBottom: 6 }}>
           Perfil
         </h1>
-        <p className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">
+        <p className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
           {totalAnalyzed === 0
             ? 'Aún no tienes análisis cerrados'
-            : `${totalAnalyzed.toString()} ${totalAnalyzed === 1 ? 'película analizada' : 'películas analizadas'}`}
+            : `${totalAnalyzed} ${totalAnalyzed === 1 ? 'película analizada' : 'películas analizadas'}`}
         </p>
       </header>
 
-      <div className="flex flex-1 pb-12 min-h-0">
-        {/* Left column 60% */}
-        <div className="basis-3/5 grow-0 shrink-0 px-11 flex flex-col gap-6 min-w-0">
+      {/* ── Columnas ── */}
+      <div style={{ display: 'flex', flex: 1, paddingBottom: 48, minHeight: 0 }}>
+
+        {/* Columna izquierda 60% */}
+        <div style={{ flex: '0 0 60%', padding: '0 44px', display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
           <SemanticProfileSection />
           <InstructionsSection onToast={showToast} />
           <MemorySection onToast={showToast} />
         </div>
 
-        {/* Right column 40% */}
-        <aside className="basis-2/5 grow-0 shrink-0 pl-6 pr-11 border-l-[0.4px] border-borde flex flex-col gap-6 min-w-0">
+        {/* Columna derecha 40% */}
+        <aside style={{ flex: '0 0 40%', padding: '0 44px 0 24px', borderLeft: '0.4px solid #2E2D2B', display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
           <PreferencesSection onToast={showToast} />
           <StatsRow
             moviesCount={moviesCount}
@@ -155,9 +134,7 @@ export default function ProfilePage(): React.ReactElement {
       </div>
 
       {toast !== null ? (
-        <div className="lumen-toast" role="status" aria-live="polite">
-          {toast}
-        </div>
+        <div className="lumen-toast" role="status" aria-live="polite">{toast}</div>
       ) : null}
     </div>
   )
