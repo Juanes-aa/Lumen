@@ -50,13 +50,15 @@ export function useInitAuth(): { isReady: boolean } {
       })
       .catch(() => {
         // Refresh falló (cookie expirada, cross-origin bloqueado, sin red…)
-        // Solo cerrar sesión si tampoco hay datos locales guardados.
         const storedUser = readStoredUser();
         if (storedUser === null) {
           clearAuth();
+        } else {
+          // Restaurar sesión con los datos locales para que isAuthenticated=true
+          // y el usuario no sea redirigido al login. El access_token quedará
+          // vacío hasta que el próximo request lo refresque.
+          setAuth(storedUser, "");
         }
-        // Si hay datos locales, dejamos al usuario en la app —
-        // el próximo request autenticado fallará y el interceptor lo manejará.
       })
       .finally(() => {
         setIsReady(true);
