@@ -1,0 +1,447 @@
+@import "tailwindcss";
+
+/* ─── Lumen design tokens (exposed to Tailwind via @theme) ─── */
+@theme {
+  --color-abyss: #0F0E0D;
+  --color-sala: #1A1917;
+  --color-pantalla: #252421;
+  --color-pantalla-soft: #1E1D1B;
+  --color-borde: #2E2D2B;
+  --color-borde-soft: #3A3937;
+  --color-celuloide: #FAF9F6;
+  --color-gray-mid: #888780;
+  --color-gray-soft: #5F5E5A;
+  --color-gray-dark: #444441;
+  --color-amber: #FAC775;
+  --color-amber-dark: #412402;
+  --color-teal: #1D9E75;
+  --color-teal-light: #E1F5EE;
+  --color-teal-dark: #04342C;
+  --color-warn: #E24B4A;
+
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+/* ─── Reset + base ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: #1A1917;
+  color: #FAF9F6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2E2D2B;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3A3937;
+}
+
+textarea,
+input {
+  font-family: inherit;
+}
+textarea {
+  resize: none;
+}
+textarea:focus,
+input:focus {
+  outline: none;
+}
+
+/* ─── Animations ─── */
+@keyframes lumen-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lumen-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lumen-pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lumen-bar-grow {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes lumen-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.lumen-anim-1 {
+  animation: lumen-fade-in-up 0.3s ease 0.04s both;
+}
+.lumen-anim-2 {
+  animation: lumen-fade-in-up 0.3s ease 0.10s both;
+}
+.lumen-anim-3 {
+  animation: lumen-fade-in-up 0.3s ease 0.16s both;
+}
+.lumen-anim-4 {
+  animation: lumen-fade-in-up 0.3s ease 0.22s both;
+}
+.lumen-anim-5 {
+  animation: lumen-fade-in-up 0.3s ease 0.28s both;
+}
+.lumen-fade-in {
+  animation: lumen-fade-in 0.4s ease both;
+}
+.lumen-msg-enter {
+  animation: lumen-fade-in-up 0.25s ease forwards;
+}
+.lumen-bar-fill {
+  animation: lumen-bar-grow 0.6s ease 0.4s both;
+}
+
+/* ─── Streaming indicator dots ─── */
+.lumen-streaming-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #FAC775;
+  animation: lumen-pulse-dot 1.4s ease-in-out infinite;
+}
+.lumen-streaming-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.lumen-streaming-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ─── Sidebar nav item ─── */
+.lumen-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #888780;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s;
+  user-select: none;
+  text-decoration: none;
+}
+.lumen-nav-item:hover {
+  color: #FAF9F6;
+}
+.lumen-nav-item.active {
+  color: #FAF9F6;
+}
+.lumen-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 18px;
+  background: #FAC775;
+  border-radius: 0 1px 1px 0;
+}
+
+/* ─── Buttons ─── */
+.lumen-btn-primary {
+  background: #FAC775;
+  border: none;
+  border-radius: 6px;
+  color: #412402;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.lumen-btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.lumen-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lumen-btn-primary.sm {
+  font-size: 12px;
+  padding: 7px 14px;
+}
+
+.lumen-btn-secondary {
+  background: transparent;
+  border: 0.5px solid #2E2D2B;
+  border-radius: 6px;
+  color: #FAF9F6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.lumen-btn-secondary:hover:not(:disabled) {
+  border-color: #3A3937;
+}
+.lumen-btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lumen-btn-secondary.sm {
+  font-size: 12px;
+  padding: 7px 14px;
+}
+
+.lumen-btn-ghost {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #888780;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.lumen-btn-ghost:hover:not(:disabled) {
+  color: #FAF9F6;
+  background: #252421;
+}
+.lumen-btn-ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Cards / sections ─── */
+.lumen-section {
+  background: #252421;
+  border: 0.4px solid #2E2D2B;
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+
+.lumen-overline {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #888780;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  display: block;
+}
+
+/* ─── Tag pills ─── */
+.lumen-tag-pill {
+  background: #252421;
+  border: 0.4px solid #2E2D2B;
+  border-radius: 4px;
+  color: #888780;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
+.lumen-chip-teal {
+  background: #04342C;
+  border: 0.4px solid rgba(29, 158, 117, 0.25);
+  border-radius: 4px;
+  color: #1D9E75;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.lumen-chip-amber {
+  background: rgba(250, 199, 117, 0.08);
+  border: 0.4px solid rgba(250, 199, 117, 0.25);
+  border-radius: 4px;
+  color: #FAC775;
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  padding: 3px 8px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.lumen-chip-suggestion {
+  background: #252421;
+  border: 0.4px solid #2E2D2B;
+  color: #888780;
+  border-radius: 4px;
+  padding: 7px 13px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+  user-select: none;
+}
+.lumen-chip-suggestion:hover:not(:disabled) {
+  border-color: #FAC775;
+  color: #FAF9F6;
+  background: #2A2927;
+}
+.lumen-chip-suggestion:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Form controls ─── */
+.lumen-input {
+  background: #1E1D1B;
+  border: 0.5px solid #2E2D2B;
+  border-radius: 6px;
+  color: #FAF9F6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 10px 12px;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.lumen-input:focus {
+  border-color: #FAC775;
+}
+.lumen-input::placeholder {
+  color: #5F5E5A;
+}
+
+.lumen-textarea {
+  background: #1E1D1B;
+  border: 0.5px solid #2E2D2B;
+  border-radius: 6px;
+  color: #FAF9F6;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  width: 100%;
+  resize: none;
+  transition: border-color 0.15s;
+}
+.lumen-textarea:focus {
+  border-color: #FAC775;
+}
+.lumen-textarea::placeholder {
+  color: #5F5E5A;
+}
+
+/* ─── Card (alias moderno de .lumen-section, usado por los nuevos componentes UI) ─── */
+.lumen-card {
+  background: #252421;
+  border: 0.5px solid rgba(46, 45, 43, 0.4);
+  border-radius: 12px;
+}
+
+/* ─── Destructive button ─── */
+.lumen-btn-danger {
+  background: transparent;
+  border: 0.5px solid rgba(226, 75, 74, 0.4);
+  border-radius: 6px;
+  color: #E24B4A;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.lumen-btn-danger:hover:not(:disabled) {
+  background: rgba(226, 75, 74, 0.08);
+  border-color: #E24B4A;
+}
+.lumen-btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lumen-btn-danger.sm {
+  font-size: 12px;
+  padding: 7px 14px;
+}
+
+/* ─── Reduced motion: neutralizar animaciones y transiciones globalmente ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Toast ─── */
+.lumen-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #04342C;
+  border: 0.4px solid rgba(29, 158, 117, 0.25);
+  border-radius: 6px;
+  color: #1D9E75;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 9px 18px;
+  letter-spacing: 0.06em;
+  animation: lumen-toast-in 0.2s ease both;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 80;
+}

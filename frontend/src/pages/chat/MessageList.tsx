@@ -1,0 +1,140 @@
+import { useEffect, useRef } from 'react'
+import Poster from '../../components/ui/Poster'
+import MessageBubble, { renderParagraphs } from './MessageBubble'
+import StreamingIndicator from './StreamingIndicator'
+import SuggestionChips from './SuggestionChips'
+import type { ChatMessage } from './useChatStream'
+import type { SessionSummary } from '../../types/analysis'
+
+interface MessageListProps {
+  messages: ChatMessage[]
+  streamingContent: string
+  isStreaming: boolean
+  isLoadingHistory: boolean
+  isClosed: boolean
+  session: SessionSummary | null
+  suggestions: string[]
+  usedSuggestions: Set<string>
+  isLoadingSuggestions: boolean
+  onPickSuggestion: (s: string) => void
+}
+
+export default function MessageList({
+  messages,
+  streamingContent,
+  isStreaming,
+  isLoadingHistory,
+  isClosed,
+  session,
+  suggestions,
+  usedSuggestions,
+  isLoadingSuggestions,
+  onPickSuggestion,
+}: MessageListProps): React.ReactElement {
+  const endRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, streamingContent])
+
+  const isEmpty: boolean = messages.length === 0 && !isStreaming
+
+  if (isLoadingHistory) {
+    return (
+      <div className="flex-1 overflow-y-auto px-10 py-7 flex flex-col gap-4">
+        {[0, 1].map((i) => (
+          <div
+            key={i}
+            className="h-[60px] rounded-[10px] bg-pantalla-soft border-[0.4px] border-borde animate-pulse"
+          />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-10 py-7 flex flex-col gap-7">
+      {/* Empty state with film context + suggestions */}
+      {isEmpty ? (
+        <div className="lumen-fade-in mt-auto pb-2">
+          <div className="flex items-center gap-5 mb-10 pb-6 border-b-[0.4px] border-borde">
+            <Poster
+              url={session?.movie_poster_url ?? null}
+              alt={session?.movie_title ?? 'Película'}
+              width={54}
+              height={80}
+            />
+            <div>
+              <p className="font-serif italic text-[22px] font-normal text-celuloide mb-[6px]">
+                {session?.movie_title ?? '—'}
+              </p>
+              <p className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">
+                Sesión activa
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <p className="lumen-overline mb-[14px]">Por dónde empezar</p>
+            <SuggestionChips
+              suggestions={suggestions}
+              usedSuggestions={usedSuggestions}
+              isLoading={isLoadingSuggestions}
+              onPick={onPickSuggestion}
+            />
+            <p className="font-sans text-[11.5px] text-gray-dark leading-[1.5]">
+              O escribe directamente. Las sugerencias son opcionales.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Messages */}
+      {messages.length > 0 ? (
+        <>
+          {messages.length === 1 ? (
+            <div className="flex items-center gap-[10px] opacity-50">
+              <Poster
+                url={session?.movie_poster_url ?? null}
+                alt={session?.movie_title ?? 'Película'}
+                width={28}
+                height={42}
+              />
+              <div>
+                <p className="font-serif text-[14px] text-celuloide">
+                  {session?.movie_title ?? '—'}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {messages.map((m) => (
+            <MessageBubble key={m.id} message={m} />
+          ))}
+        </>
+      ) : null}
+
+      {/* Streaming bubble */}
+      {isStreaming ? (
+        <div className="lumen-msg-enter flex flex-col gap-[6px] max-w-[68%]">
+          <span className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">Lumen</span>
+          <div className="border-l-2 border-amber pl-[14px]">
+            {streamingContent !== '' ? (
+              renderParagraphs(streamingContent, true)
+            ) : (
+              <StreamingIndicator />
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {isClosed && messages.length > 0 ? (
+        <div className="text-center py-4 border-t-[0.4px] border-borde mt-2">
+          <p className="font-mono text-[10.5px] text-gray-dark tracking-[0.06em]">Sesión cerrada</p>
+        </div>
+      ) : null}
+
+      <div ref={endRef} />
+    </div>
+  )
+}

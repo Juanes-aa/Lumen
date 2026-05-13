@@ -1,0 +1,75 @@
+CineThink — Notas de hardening (mayo 2026)
+============================================
+
+Fases completadas:
+  1. Validación de input (Pydantic)
+  2. Rate limiting con slowapi
+  3. Manejo de errores y logging (request_id, handler global, logs estructurados)
+  4. Refresh token a cookie HttpOnly (Path=/auth, SameSite/Secure por settings)
+
+Estado: 80 tests backend pasando, frontend build OK.
+
+
+TODOs pendientes (no bloqueantes)
+---------------------------------
+
+[rate-limit] Storage in-memory
+  - app/dependencies/rate_limit.py
+  - Hoy slowapi guarda contadores en memoria del proceso. Con N workers en
+    Render el límite real es N × límite. Migrar a Redis con
+    `Limiter(storage_uri="redis://...")` cuando despleguemos con >1 worker.
+
+[rate-limit] key_func por IP
+  - app/dependencies/rate_limit.py usa get_remote_address.
+  - Para endpoints autenticados (analysis/messages, recommendations/generate)
+    sería más justo usar user_id. Requiere un key_func que lea
+    request.state.user_id (asignado tras validar el JWT).
+
+[rate-limit] Retry-After header
+  - main.py::_rate_limit_exceeded_handler ya tiene la variable preparada
+    pero no la rellena. Calcular ventana restante desde slowapi y devolverla.
+
+[errors] Fallbacks por substring
+  - app/routers/auth.py::_is_duplicate_user_error (TODO marcado)
+  - app/routers/movies.py::_is_unique_violation (TODO marcado)
+  - Ambos loguean cuando se activan: buscar en logs
+      `auth_duplicate_fallback`
+      `movies_unique_violation_fallback`
+    Si tras un tiempo no aparecen, eliminar el fallback y dejar sólo la
+    detección estructurada por código.
+
+[security] CSRF
+  - /auth/refresh y /auth/logout dependen únicamente de la cookie HttpOnly.
+  - El resto de endpoints requiere `Authorization: Bearer <access_token>`,
+    que no se envía automáticamente por el navegador, así que no son
+    vulnerables a CSRF clásico.
+  - /auth/refresh no es destructivo (sólo emite un access_token nuevo) y
+    /auth/logout sólo borra la cookie del propio usuario, así que el riesgo
+    real es bajo. Aun así, considerar añadir un CSRF token (double-submit
+    cookie o header X-CSRF) si se añaden endpoints destructivos basados en
+    cookie.
+
+[deploy] Variables que hay que setear en Render para producción
+  - COOKIE_SECURE=true
+  - COOKIE_SAMESITE=none
+  - CORS_ORIGINS=https://<dominio-vercel>   (no usar "*")
+  - RATE_LIMIT_ENABLED=true                 (default)
+
+[deploy] Variables Vite frontend
+  - VITE_API_URL=https://<dominio-render>
+
+
+Decisiones de diseño que conviene recordar
+------------------------------------------
+
+- Cookie de refresh_token vive en Path=/auth: así no se envía con cada
+  request normal, sólo con /auth/refresh y /auth/logout.
+- Max-Age = 30 días (settings.refresh_cookie_max_age_seconds).
+- En login/register también se rota la cookie cuando Supabase devuelve
+  un refresh_token nuevo (rotation-on-refresh).
+- El user (no sensible: id/email/username) se persiste en sessionStorage
+  para hidratar el store sin esperar al refresh; al cerrar la pestaña se
+  pierde y el siguiente acceso re-hidratará vía cookie.
+- Errores 500 NUNCA exponen str(exc) al cliente. Body: {detail, request_id}.
+- Header X-Request-ID se devuelve en TODAS las respuestas; se reusa el
+  valor entrante si el cliente lo envía (correlación frontend ↔ backend).
