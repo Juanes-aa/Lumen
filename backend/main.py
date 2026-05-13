@@ -18,7 +18,7 @@ from app.routers.recommendations import router as recommendations_router
 from app.routers.export import router as export_router
 from app.config import get_settings
 from app.dependencies.rate_limit import limiter
-from app.dependencies.supabase import get_supabase_client
+from app.dependencies.supabase import get_supabase_admin
 from app.exceptions import register_exception_handlers
 from app.middleware import RequestIdMiddleware
 
@@ -79,6 +79,6 @@ def health_check() -> dict[str, str]:
 
 @app.get("/health/db")
 def health_db_check() -> dict[str, str]:
-    client: Client = get_supabase_client()
+    client: Client = get_supabase_admin()
     client.table("profiles").select("id").limit(1).execute()
     return {"status": "ok", "db": "connected"}
