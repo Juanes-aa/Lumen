@@ -53,8 +53,8 @@ export default function RegisterPage(): React.ReactElement {
     'lumen-input focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
 
   return (
-    <div className="min-h-screen bg-sala flex items-center justify-center p-4">
-      <div className="lumen-anim-1 w-full max-w-[420px] bg-pantalla border-[0.4px] border-borde rounded-xl px-8 py-9">
+    <div className="h-screen bg-sala flex items-center justify-center p-4">
+      <div className="lumen-anim-1 w-full max-w-[420px] bg-pantalla border-[0.5px] border-borde-soft rounded-xl px-8 py-9 shadow-[0_8px_48px_rgba(0,0,0,0.5)]">
         <div className="flex items-center justify-center gap-[10px] mb-6">
           <LumenSymbol size={28} />
           <span className="font-serif text-[28px] font-medium text-celuloide tracking-[-0.02em]">
