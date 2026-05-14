@@ -111,7 +111,9 @@ app.add_middleware(RequestIdMiddleware)
 @app.on_event("startup")
 async def _startup_log() -> None:
     origins = get_settings().get_cors_origins()
-    logger.info("cors_allowed_origins count=%d values=%s", len(origins), origins)
+    logging.getLogger(__name__).info(
+        "cors_allowed_origins count=%d values=%s", len(origins), origins
+    )
 
 
 app.include_router(auth_router)
