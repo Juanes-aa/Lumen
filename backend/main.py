@@ -93,9 +93,7 @@ class CORSMiddleware:
 
         async def send_with_cors(message: dict) -> None:
             if message["type"] == "http.response.start":
-                if "headers" not in message:
-                    message["headers"] = []
-                mutable = MutableHeaders(headers=message["headers"])
+                mutable = MutableHeaders(scope=message)
                 mutable["access-control-allow-origin"] = origin
                 mutable["access-control-allow-credentials"] = "true"
                 mutable["vary"] = "Origin"
