@@ -275,7 +275,7 @@ async def get_session_suggestions(
         )
 
     title: str = str(row["movies_watched"]["title"])
-    overview: str = str(row["movies_watched"].get("overview", ""))
+    overview: str = row["movies_watched"].get("overview") or ""
 
     suggestions: list[str] = await generate_session_suggestions(title, overview, groq)
     return SuggestionsResponse(suggestions=suggestions)
