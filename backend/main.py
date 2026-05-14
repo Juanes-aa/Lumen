@@ -93,9 +93,12 @@ class CORSMiddleware:
 
         async def send_with_cors(message: dict) -> None:
             if message["type"] == "http.response.start":
-                mutable = MutableHeaders(scope=message)
+                if "headers" not in message:
+                    message["headers"] = []
+                mutable = MutableHeaders(headers=message["headers"])
                 mutable["access-control-allow-origin"] = origin
                 mutable["access-control-allow-credentials"] = "true"
+                mutable["vary"] = "Origin"
             await send(message)
 
         await self.app(scope, receive, send_with_cors)
@@ -104,6 +107,12 @@ class CORSMiddleware:
 app.add_middleware(CORSMiddleware)
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(RequestIdMiddleware)
+
+@app.on_event("startup")
+async def _startup_log() -> None:
+    origins = get_settings().get_cors_origins()
+    logger.info("cors_allowed_origins count=%d values=%s", len(origins), origins)
+
 
 app.include_router(auth_router)
 app.include_router(movies_router)
