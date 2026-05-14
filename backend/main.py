@@ -68,10 +68,13 @@ async def cors_middleware(request: Request, call_next):  # type: ignore[return]
     if request.method == "OPTIONS":
         resp = Response(status_code=200)
         if is_allowed:
+            requested_headers: str = request.headers.get(
+                "access-control-request-headers", "authorization, content-type"
+            )
             resp.headers["Access-Control-Allow-Origin"] = origin
             resp.headers["Access-Control-Allow-Credentials"] = "true"
             resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            resp.headers["Access-Control-Allow-Headers"] = "*"
+            resp.headers["Access-Control-Allow-Headers"] = requested_headers
             resp.headers["Access-Control-Max-Age"] = "600"
         return resp
 
