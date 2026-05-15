@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMovieSearch } from '../hooks/useMovieSearch'
 import { getPosterUrl } from '../services/tmdb'
@@ -6,10 +6,25 @@ import LumenSymbol from '../components/LumenSymbol'
 import Poster from '../components/ui/Poster'
 import type { TmdbSearchResult } from '../types/tmdb'
 
-const GENRES: string[] = [
-  'Drama', 'Terror', 'Sci-Fi', 'Comedia', 'Thriller',
-  'Animación', 'Documental', 'Romance',
-]
+const TMDB_GENRE_MAP: Record<number, string> = {
+  28: 'Acción',
+  12: 'Aventura',
+  16: 'Animación',
+  35: 'Comedia',
+  80: 'Crimen',
+  99: 'Documental',
+  18: 'Drama',
+  10751: 'Familia',
+  14: 'Fantasía',
+  36: 'Histórico',
+  27: 'Terror',
+  9648: 'Misterio',
+  10749: 'Romance',
+  878: 'Sci-Fi',
+  53: 'Thriller',
+  10752: 'Bélica',
+  37: 'Western',
+}
 
 interface SearchResultCardProps {
   movie: TmdbSearchResult
@@ -53,6 +68,7 @@ function SkeletonCard(): React.ReactElement {
 
 export default function SearchPage(): React.ReactElement {
   const [query, setQuery] = useState<string>('')
+  const [activeGenreId, setActiveGenreId] = useState<number | null>(null)
   const { results, isLoading, error } = useMovieSearch(query)
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -61,10 +77,28 @@ export default function SearchPage(): React.ReactElement {
     inputRef.current?.focus()
   }, [])
 
+  useEffect(() => {
+    setActiveGenreId(null)
+  }, [query])
+
   const trimmed: string = query.trim()
   const tooShort: boolean = trimmed.length < 2
   const hasSearched: boolean = !tooShort && !isLoading
   const noResults: boolean = hasSearched && results.length === 0 && error === null
+
+  const presentGenres: { id: number; name: string }[] = useMemo(() => {
+    const ids = new Set<number>()
+    results.forEach((m) => m.genre_ids.forEach((id) => ids.add(id)))
+    return Array.from(ids)
+      .filter((id) => id in TMDB_GENRE_MAP)
+      .map((id) => ({ id, name: TMDB_GENRE_MAP[id] }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [results])
+
+  const filtered: TmdbSearchResult[] = useMemo(() => {
+    if (activeGenreId === null) return results
+    return results.filter((m) => m.genre_ids.includes(activeGenreId))
+  }, [results, activeGenreId])
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -134,13 +168,41 @@ export default function SearchPage(): React.ReactElement {
 
         {!isLoading && error === null && results.length > 0 ? (
           <div className="lumen-anim-2">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            {/* Genre filter chips */}
+            {presentGenres.length > 1 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
+                <button
+                  type="button"
+                  onClick={() => { setActiveGenreId(null) }}
+                  aria-pressed={activeGenreId === null}
+                  className={`rounded-[4px] font-sans cursor-pointer transition-colors select-none border-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${activeGenreId === null ? 'bg-[rgba(250,199,117,0.08)] border-amber text-celuloide' : 'bg-transparent border-borde text-gray-mid hover:border-borde-soft'}`}
+                  style={{ fontSize: 11.5, padding: '5px 11px' }}
+                >
+                  Todos
+                </button>
+                {presentGenres.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => { setActiveGenreId(activeGenreId === g.id ? null : g.id) }}
+                    aria-pressed={activeGenreId === g.id}
+                    className={`rounded-[4px] font-sans cursor-pointer transition-colors select-none border-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${activeGenreId === g.id ? 'bg-[rgba(250,199,117,0.08)] border-amber text-celuloide' : 'bg-transparent border-borde text-gray-mid hover:border-borde-soft'}`}
+                    style={{ fontSize: 11.5, padding: '5px 11px' }}
+                  >
+                    {g.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <span className="font-mono text-gray-mid" style={{ fontSize: 10, letterSpacing: '0.06em' }}>
-                {results.length} resultado{results.length !== 1 ? 's' : ''}
+                {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
+                {activeGenreId !== null ? ` · ${TMDB_GENRE_MAP[activeGenreId] ?? ''}` : ''}
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-              {results.map((movie) => (
+              {filtered.map((movie) => (
                 <SearchResultCard
                   key={movie.id}
                   movie={movie}
@@ -164,26 +226,9 @@ export default function SearchPage(): React.ReactElement {
 
         {tooShort && error === null && !isLoading ? (
           <div className="lumen-anim-1">
-            <p className="font-serif italic text-celuloide" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 28, maxWidth: 500 }}>
+            <p className="font-serif italic text-celuloide" style={{ fontSize: 22, lineHeight: 1.3, maxWidth: 500 }}>
               Empieza por el título. O por lo que todavía estás procesando.
             </p>
-
-            {/* Filtros por género */}
-            <div>
-              <p className="lumen-overline" style={{ marginBottom: 14 }}>Por género</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {GENRES.map((genre) => (
-                  <button
-                    key={genre}
-                    type="button"
-                    onClick={() => { setQuery(genre) }}
-                    className="lumen-chip-suggestion"
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         ) : null}
 
