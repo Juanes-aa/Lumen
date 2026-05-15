@@ -10,21 +10,23 @@ export function FAQItem({ question, answer }: FAQItemProps): React.ReactElement 
   const contentId = useId()
 
   return (
-    <div className="border-b border-[0.4px] border-borde last:border-b-0">
+    <div style={{ borderBottom: '0.4px solid #2E2D2B' }} className="last:border-b-0">
       <button
         type="button"
         aria-expanded={isOpen}
         aria-controls={contentId}
         onClick={() => { setIsOpen((prev) => !prev) }}
-        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber transition-opacity duration-150 hover:opacity-80"
+        className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber hover:opacity-80 transition-opacity duration-150"
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '22px 0', textAlign: 'left', cursor: 'pointer', background: 'transparent', border: 'none' }}
       >
         <span className="font-sans text-celuloide" style={{ fontSize: 14.5, lineHeight: 1.6 }}>
           {question}
         </span>
         <span
-          className="shrink-0 text-gray-mid"
+          className="text-gray-mid"
           style={{
             display: 'block',
+            flexShrink: 0,
             transition: 'transform 0.2s ease',
             transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
           }}

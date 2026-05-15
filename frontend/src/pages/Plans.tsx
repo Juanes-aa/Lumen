@@ -199,7 +199,7 @@ export default function PlansPage(): React.ReactElement {
             style={{
               border: '0.4px solid #2E2D2B',
               borderRadius: 10,
-              padding: '0 24px',
+              padding: '0 36px',
               background: '#252421',
             }}
           >
