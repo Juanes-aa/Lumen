@@ -77,18 +77,18 @@ export default function PlansPage(): React.ReactElement {
     <div style={{ height: '100vh', overflowY: 'auto', background: SALA }}>
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-      <section style={{ background: ABYSS, padding: '56px 24px 80px', textAlign: 'center' }}>
+      <section style={{ background: ABYSS, padding: '36px 24px 56px', textAlign: 'center' }}>
 
         {/* Logo mínimo para orientar al usuario */}
         <Link
           to="/"
           className="inline-flex items-center justify-center gap-2.5 no-underline"
-          style={{ marginBottom: 56, opacity: 0.85 }}
+          style={{ marginBottom: 40, opacity: 0.85 }}
         >
-          <LumenSymbol size={22} />
+          <LumenSymbol size={30} />
           <span
             className="font-serif text-celuloide"
-            style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.02em' }}
+            style={{ fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em' }}
           >
             Lumen
           </span>
