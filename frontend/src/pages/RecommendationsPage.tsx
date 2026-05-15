@@ -17,44 +17,39 @@ interface RecCardProps {
 
 function RecCard({ rec, onDismiss }: RecCardProps): React.ReactElement {
   return (
-    <article className="flex flex-col bg-pantalla border-[0.4px] border-borde rounded-[10px] overflow-hidden cursor-pointer transition-[border-color,transform] hover:border-borde-soft hover:-translate-y-[2px]">
+    <article
+      className="bg-pantalla border-[0.4px] border-borde rounded-[10px] overflow-hidden cursor-pointer transition-[border-color,transform] hover:border-borde-soft hover:-translate-y-[2px]"
+      style={{ display: 'flex', flexDirection: 'column' }}
+    >
       <div className="border-b-[0.4px] border-borde">
         <Poster url={rec.poster_url} alt={rec.title} fluid rounded="none" />
       </div>
-      <div className="px-4 pt-4 pb-[14px] flex flex-col gap-3 flex-1">
-        {/* Title + meta */}
-        <div>
-          <p className="font-serif text-[18px] font-medium text-celuloide leading-[1.15] tracking-[-0.01em] mb-1">
-            {rec.title}
-          </p>
-        </div>
+      <div style={{ padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        <p className="font-serif text-celuloide" style={{ fontSize: 18, fontWeight: 500, lineHeight: 1.15, letterSpacing: '-0.01em', marginBottom: 0 }}>
+          {rec.title}
+        </p>
 
-        {/* Reason */}
         <div>
-          <p className="font-mono text-[9.5px] text-amber tracking-[0.16em] uppercase mb-[7px]">
+          <p className="font-mono text-amber" style={{ fontSize: 9.5, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 7 }}>
             Por qué para ti
           </p>
-          <p className="font-sans text-[12.5px] text-gray-mid leading-[1.65]">{rec.reason}</p>
+          <p className="font-sans text-gray-mid" style={{ fontSize: 12.5, lineHeight: 1.65 }}>{rec.reason}</p>
         </div>
 
         {rec.themes.length > 0 ? (
-          <div className="flex flex-wrap gap-[6px]">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {rec.themes.map((t) => (
-              <span key={t} className="lumen-tag-pill">
-                {t}
-              </span>
+              <span key={t} className="lumen-tag-pill">{t}</span>
             ))}
           </div>
         ) : null}
 
-        <div className="mt-auto pt-[6px] border-t-[0.4px] border-borde">
+        <div className="border-t-[0.4px] border-borde" style={{ marginTop: 'auto', paddingTop: 6 }}>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDismiss()
-            }}
-            className="bg-transparent border-none text-gray-dark font-sans text-[11px] cursor-pointer py-1 transition-colors text-left hover:text-gray-mid focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+            onClick={(e) => { e.stopPropagation(); onDismiss() }}
+            className="bg-transparent border-none text-gray-dark font-sans cursor-pointer transition-colors text-left hover:text-gray-mid focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+            style={{ fontSize: 11, padding: '4px 0' }}
             aria-label={`Descartar recomendación: ${rec.title}`}
           >
             No me interesa
@@ -73,11 +68,8 @@ interface StepCircleProps {
 function StepCircle({ n, filled }: StepCircleProps): React.ReactElement {
   return (
     <div
-      className={`rounded-full flex items-center justify-center font-mono text-[13px] font-medium ${
-        filled
-          ? 'w-9 h-9 bg-amber text-amber-dark'
-          : 'w-8 h-8 bg-transparent border-[0.4px] border-borde text-gray-mid'
-      }`}
+      className={`rounded-full font-mono font-medium ${filled ? 'bg-amber text-amber-dark' : 'bg-transparent border-[0.4px] border-borde text-gray-mid'}`}
+      style={{ width: filled ? 36 : 32, height: filled ? 36 : 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
       aria-hidden="true"
     >
       {n}
@@ -94,19 +86,19 @@ interface EmptyStateProps {
 
 function EmptyState({ onPrimary, primaryLabel, title, hint }: EmptyStateProps): React.ReactElement {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-7 px-10 py-[60px]">
-      <div className="flex gap-3 items-center">
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 28, padding: '60px 44px' }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <StepCircle n={1} filled />
-        <div className="w-7 h-[0.4px] bg-borde" aria-hidden="true" />
+        <div className="bg-borde" style={{ width: 28, height: '0.4px' }} aria-hidden="true" />
         <StepCircle n={2} filled={false} />
-        <div className="w-7 h-[0.4px] bg-borde" aria-hidden="true" />
+        <div className="bg-borde" style={{ width: 28, height: '0.4px' }} aria-hidden="true" />
         <StepCircle n={3} filled={false} />
       </div>
-      <div className="text-center max-w-[440px]">
-        <p className="font-serif italic text-[22px] font-normal text-celuloide leading-[1.3] mb-[14px]">
+      <div style={{ textAlign: 'center', maxWidth: 440 }}>
+        <p className="font-serif italic text-celuloide" style={{ fontSize: 22, lineHeight: 1.3, marginBottom: 14 }}>
           {title}
         </p>
-        <p className="font-sans text-[13px] text-gray-mid leading-[1.6]">{hint}</p>
+        <p className="font-sans text-gray-mid" style={{ fontSize: 13, lineHeight: 1.6 }}>{hint}</p>
       </div>
       <Button onClick={onPrimary}>{primaryLabel}</Button>
     </div>
@@ -169,46 +161,45 @@ export default function RecommendationsPage(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="flex-1 px-11 py-9 overflow-y-auto">
-        <div className="h-9 w-[220px] bg-pantalla rounded-[4px] mb-7 animate-pulse" />
-        <div className="grid gap-4 grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <CardSkeleton key={i} />
-          ))}
+      <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+        <div style={{ height: 36, width: 220, background: '#252421', borderRadius: 4, marginBottom: 28 }} className="animate-pulse" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {[0, 1, 2].map((i) => <CardSkeleton key={i} />)}
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="lumen-anim-1 px-11 pt-10 pb-0 shrink-0">
-        <p className="lumen-overline mb-2">Basado en cómo piensas</p>
-        <h1 className="font-serif text-[32px] font-medium text-celuloide tracking-[-0.02em] leading-[1.1] mb-2">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+      {/* Header */}
+      <div className="lumen-anim-1" style={{ padding: '36px 44px 0', flexShrink: 0 }}>
+        <p className="lumen-overline" style={{ marginBottom: 8 }}>Basado en cómo piensas</p>
+        <h1 className="font-serif text-celuloide" style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: 8 }}>
           Lo que viene después
         </h1>
-        <p className="font-sans text-[13.5px] text-gray-mid leading-[1.6] max-w-[540px] mb-6">
+        <p className="font-sans text-gray-mid" style={{ fontSize: 13.5, lineHeight: 1.6, maxWidth: 540, marginBottom: 24 }}>
           No porque otros lo vieron. Porque tú, específicamente, estás listo para esto.
         </p>
-        <div className="lumen-anim-2 flex gap-2 mb-8 flex-wrap items-center">
+        <div className="lumen-anim-2" style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap', alignItems: 'center' }}>
           {activeRecs.length > 0 ? (
             <Button variant="secondary" size="sm" onClick={handleGenerate} disabled={generating}>
               {generating ? 'Generando…' : 'Generar nuevas'}
             </Button>
           ) : null}
           {activeRecs.length > 0 ? (
-            <span className="font-mono text-[10px] text-gray-mid ml-2">
+            <span className="font-mono text-gray-mid" style={{ fontSize: 10, marginLeft: 8 }}>
               {activeRecs.length} película{activeRecs.length !== 1 ? 's' : ''}
             </span>
           ) : null}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-11 pt-6 pb-12">
+      {/* Content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 44px 48px' }}>
         {error !== null ? (
-          <p role="alert" className="font-sans text-[13px] text-warn mb-4">
-            {error}
-          </p>
+          <p role="alert" className="font-sans text-warn" style={{ fontSize: 13, marginBottom: 16 }}>{error}</p>
         ) : null}
 
         {needsMoreAnalysis ? (
@@ -216,9 +207,7 @@ export default function RecommendationsPage(): React.ReactElement {
             title="Analiza 3 películas para que Lumen entienda cómo piensas."
             hint="Una película no es suficiente. Con tres, Lumen empieza a ver un patrón."
             primaryLabel="Ir a tu biblioteca"
-            onPrimary={() => {
-              navigate('/library')
-            }}
+            onPrimary={() => { navigate('/library') }}
           />
         ) : null}
 
@@ -232,23 +221,15 @@ export default function RecommendationsPage(): React.ReactElement {
         ) : null}
 
         {generating && activeRecs.length === 0 ? (
-          <div className="grid gap-4 grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <CardSkeleton key={i} />
-            ))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {[0, 1, 2].map((i) => <CardSkeleton key={i} />)}
           </div>
         ) : null}
 
         {activeRecs.length > 0 ? (
-          <div className="lumen-anim-2 grid gap-4 grid-cols-3">
+          <div className="lumen-anim-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
             {activeRecs.map((rec) => (
-              <RecCard
-                key={rec.id}
-                rec={rec}
-                onDismiss={() => {
-                  handleDismiss(rec.id)
-                }}
-              />
+              <RecCard key={rec.id} rec={rec} onDismiss={() => { handleDismiss(rec.id) }} />
             ))}
           </div>
         ) : null}
