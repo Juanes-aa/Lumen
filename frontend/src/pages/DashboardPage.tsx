@@ -72,7 +72,7 @@ function ActiveSessionCard({ session, releaseYear, tags, onResume }: ActiveSessi
           </div>
         ) : null}
       </div>
-      <Button size="sm" className="shrink-0" onClick={onResume}>
+      <Button size="sm" className="shrink-0" style={{ marginLeft: 16 }} onClick={onResume}>
         Retomar
       </Button>
     </div>
