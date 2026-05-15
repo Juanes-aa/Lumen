@@ -45,18 +45,19 @@ export default function MemorySection({ onToast }: MemorySectionProps): React.Re
 
   return (
     <section className="lumen-anim-4 lumen-section">
-      <div className="flex justify-between items-start mb-4">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <span className="lumen-overline">Lo que Lumen siempre considera</span>
-        <span className={`font-mono text-[10px] ${atMax ? 'text-warn' : 'text-gray-mid'}`}>
+        <span className={`font-mono ${atMax ? 'text-warn' : 'text-gray-mid'}`} style={{ fontSize: 10 }}>
           {memoryNotes.length}/{MAX_NOTES}
         </span>
       </div>
       {memoryNotes.length > 0 ? (
-        <div className="flex flex-wrap gap-2 mb-[14px]">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
           {memoryNotes.map((note) => (
             <div
               key={note.id}
-              className="flex items-center gap-[7px] bg-pantalla-soft border-[0.4px] border-borde rounded-[4px] text-gray-mid font-sans text-[11.5px] px-[10px] py-[5px]"
+              className="bg-pantalla-soft border-[0.4px] border-borde rounded-[4px] text-gray-mid font-sans"
+              style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, padding: '5px 10px' }}
             >
               <span>{note.content}</span>
               <button
@@ -65,7 +66,8 @@ export default function MemorySection({ onToast }: MemorySectionProps): React.Re
                   handleDelete(note.id)
                 }}
                 aria-label={`Eliminar nota: ${note.content}`}
-                className="bg-transparent border-none text-gray-dark cursor-pointer p-0 flex items-center hover:text-warn focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+                className="bg-transparent border-none text-gray-dark cursor-pointer flex items-center hover:text-warn focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
+                style={{ padding: 0 }}
               >
                 <svg
                   width="10"
@@ -85,11 +87,12 @@ export default function MemorySection({ onToast }: MemorySectionProps): React.Re
           ))}
         </div>
       ) : null}
-      <div className="flex gap-2">
+      <div style={{ display: 'flex', gap: 8 }}>
         <input
           id="profile-new-memory-note"
           aria-label="Nueva nota de memoria"
-          className="lumen-input flex-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+          className="lumen-input focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+          style={{ flex: 1, fontSize: 12 }}
           placeholder="Agregar una nota de contexto…"
           value={newNoteContent}
           onChange={(e) => {
@@ -113,7 +116,7 @@ export default function MemorySection({ onToast }: MemorySectionProps): React.Re
           + Agregar
         </button>
       </div>
-      <p className="font-mono text-[10px] text-gray-dark tracking-[0.05em] mt-[10px]">
+      <p className="font-mono text-gray-dark" style={{ fontSize: 10, letterSpacing: '0.05em', marginTop: 14 }}>
         Máximo {MAX_NOTES} notas activas · {MAX_LEN} caracteres por nota
       </p>
     </section>

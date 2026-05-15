@@ -49,7 +49,8 @@ export default function InstructionsSection({ onToast }: InstructionsSectionProp
     <section className="lumen-anim-3 lumen-section">
       <label
         htmlFor="profile-instructions"
-        className="lumen-overline mb-[14px] cursor-default"
+        className="lumen-overline cursor-default"
+        style={{ display: 'block', marginBottom: 20 }}
       >
         Cómo quieres que te responda Lumen
       </label>
@@ -63,8 +64,8 @@ export default function InstructionsSection({ onToast }: InstructionsSectionProp
         }}
         maxLength={1000}
       />
-      <div className="flex justify-between items-center mt-[10px]">
-        <p className="font-mono text-[10px] text-gray-dark tracking-[0.06em]">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+        <p className="font-mono text-gray-dark" style={{ fontSize: 10, letterSpacing: '0.06em' }}>
           Los cambios aplican a tu próxima sesión · {instructions.length}/1000
         </p>
         <Button
