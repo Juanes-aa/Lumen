@@ -64,39 +64,53 @@ interface MovieCardProps {
 
 function MovieCard({ movie, hasAnalysis, onDelete: _onDelete }: MovieCardProps): React.ReactElement {
   return (
-    <div className="group bg-pantalla border-[0.4px] border-borde rounded-[8px] overflow-hidden cursor-pointer transition-colors relative flex flex-col hover:border-borde-soft">
-      <div className="relative">
+    <div
+      className="group bg-pantalla border-[0.4px] border-borde rounded-[8px] overflow-hidden cursor-pointer transition-colors hover:border-borde-soft"
+      style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}
+    >
+      <div style={{ position: 'relative' }}>
         <Link to={`/movie/${movie.tmdb_id.toString()}`} className="block">
           <Poster url={movie.poster_url} alt={movie.title} fluid rounded="none" />
         </Link>
         {hasAnalysis ? (
-          <span className="absolute top-[7px] right-[7px] bg-teal-dark border-[0.4px] border-[rgba(29,158,117,0.31)] rounded-[4px] text-teal font-mono text-[9px] px-[6px] py-[2px] tracking-[0.07em] uppercase z-10">
+          <span
+            className="bg-teal-dark border-[0.4px] border-[rgba(29,158,117,0.31)] rounded-[4px] text-teal font-mono tracking-[0.07em] uppercase"
+            style={{ position: 'absolute', top: 7, right: 7, fontSize: 9, padding: '2px 6px', zIndex: 10 }}
+          >
             Analizada
           </span>
         ) : null}
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-[rgba(15,14,13,0.82)] flex flex-col items-center justify-end px-3 pb-[14px] gap-[7px] opacity-0 transition-opacity group-hover:opacity-100 rounded-[6px_6px_0_0]">
+        <div
+          className="absolute inset-0 bg-[rgba(15,14,13,0.82)] opacity-0 transition-opacity group-hover:opacity-100"
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', padding: '0 12px 14px', gap: 7, borderRadius: '6px 6px 0 0' }}
+        >
           {hasAnalysis ? (
             <Link
               to={`/movie/${movie.tmdb_id.toString()}`}
-              className="w-full rounded-[5px] bg-transparent border-[0.4px] border-[#3A3937] text-celuloide font-sans text-[11px] font-medium py-[7px] text-center transition-opacity hover:opacity-85"
+              className="font-sans text-celuloide font-medium text-center transition-opacity hover:opacity-85"
+              style={{ width: '100%', borderRadius: 5, background: 'transparent', border: '0.4px solid #3A3937', fontSize: 11, padding: '7px 0', display: 'block' }}
             >
               Ver análisis
             </Link>
           ) : null}
           <Link
             to={`/movie/${movie.tmdb_id.toString()}`}
-            className="w-full rounded-[5px] bg-amber border-none text-amber-dark font-sans text-[11px] font-medium py-[7px] text-center transition-opacity hover:opacity-85"
+            className="font-sans text-amber-dark font-medium text-center transition-opacity hover:opacity-85"
+            style={{ width: '100%', borderRadius: 5, background: '#FAC775', fontSize: 11, padding: '7px 0', display: 'block' }}
           >
             {hasAnalysis ? 'Nueva sesión' : 'Analizar ahora'}
           </Link>
         </div>
       </div>
-      <div className="px-[11px] pt-[10px] pb-3">
-        <p className="font-serif text-[13.5px] font-medium text-celuloide leading-[1.2] mb-[3px] overflow-hidden line-clamp-2">
+      <div style={{ padding: '10px 11px 12px' }}>
+        <p
+          className="font-serif text-celuloide"
+          style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.2, marginBottom: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+        >
           {movie.title}
         </p>
-        <p className="font-mono text-[9.5px] text-gray-mid tracking-[0.04em]">
+        <p className="font-mono text-gray-mid" style={{ fontSize: 9.5, letterSpacing: '0.04em' }}>
           {movie.release_year ?? '—'}
         </p>
       </div>
