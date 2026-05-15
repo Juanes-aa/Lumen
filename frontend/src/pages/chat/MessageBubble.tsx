@@ -33,7 +33,7 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
   if (message.role === 'user') {
     return (
       <div className="lumen-msg-enter flex justify-end">
-        <div className="max-w-[62%] bg-pantalla border-[0.4px] border-borde rounded-[10px_10px_2px_10px] px-[14px] py-[10px]">
+        <div className="bg-pantalla border-[0.4px] border-borde rounded-[10px_10px_2px_10px]" style={{ maxWidth: '62%', padding: '10px 18px' }}>
           <p className="font-sans text-[13px] text-celuloide leading-[1.65] whitespace-pre-wrap">
             {message.content}
           </p>
