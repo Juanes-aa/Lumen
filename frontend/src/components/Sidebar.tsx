@@ -75,6 +75,20 @@ export default function Sidebar(): React.ReactElement {
 
       {/* Bottom */}
       <div style={{ borderTop: '0.4px solid #2E2D2B', paddingTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ margin: '4px 14px 6px' }}>
+          <div style={{ background: '#1A1917', border: '0.4px solid #2E2D2B', borderRadius: 6, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#888780', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Plan</span>
+              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#888780' }}>Free</span>
+            </div>
+            <button
+              type="button"
+              style={{ background: 'transparent', border: '0.4px solid rgba(250,199,117,0.25)', borderRadius: 4, color: '#FAC775', fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, padding: '5px 0', cursor: 'pointer', width: '100%', textAlign: 'center' }}
+            >
+              Upgrade →
+            </button>
+          </div>
+        </div>
         <button
           type="button"
           onClick={() => { void handleLogout() }}
