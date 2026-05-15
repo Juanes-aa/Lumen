@@ -72,7 +72,7 @@ export function PlanCard({
       {/* Badge recomendado */}
       {isRecommended && (
         <div
-          style={{ position: 'absolute', top: -22, left: '50%', transform: 'translateX(-50%)' }}
+          style={{ position: 'absolute', top: -38, left: '50%', transform: 'translateX(-50%)' }}
         >
           <span
             className="font-mono uppercase whitespace-nowrap"

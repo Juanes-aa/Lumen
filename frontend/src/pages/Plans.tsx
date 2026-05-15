@@ -118,7 +118,7 @@ export default function PlansPage(): React.ReactElement {
       {/* ── TARJETAS DE PLANES ────────────────────────────────────────────── */}
       <section
         aria-label="Planes disponibles"
-        style={{ background: SALA, padding: '88px 48px 72px' }}
+        style={{ background: SALA, padding: '100px 48px 72px' }}
       >
         <div
           style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, alignItems: 'stretch' }}
