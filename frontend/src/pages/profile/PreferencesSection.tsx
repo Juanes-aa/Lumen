@@ -31,11 +31,12 @@ function GenreChip({ genre, selected, onClick }: GenreChipProps): React.ReactEle
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`rounded-[4px] font-sans text-xs px-3 py-[6px] cursor-pointer transition-colors select-none border-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${
+      className={`rounded-[4px] font-sans cursor-pointer transition-colors select-none border-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${
         selected
           ? 'bg-[rgba(250,199,117,0.06)] border-amber text-celuloide'
           : 'bg-pantalla border-borde text-gray-mid hover:border-borde-soft'
       }`}
+      style={{ fontSize: 12, padding: '6px 12px' }}
     >
       {genre}
     </button>
@@ -89,28 +90,27 @@ export default function PreferencesSection({ onToast }: PreferencesSectionProps)
 
   return (
     <section className="lumen-anim-3 lumen-section">
-      <span className="lumen-overline mb-4">Preferencias declaradas</span>
+      <span className="lumen-overline" style={{ display: 'block', marginBottom: 16 }}>Preferencias declaradas</span>
 
-      <div className="mb-5">
-        <p className="font-sans text-xs text-gray-mid mb-3">Géneros favoritos</p>
-        <div className="flex flex-wrap gap-[7px]">
+      <div style={{ marginBottom: 20 }}>
+        <p className="font-sans text-gray-mid" style={{ fontSize: 12, marginBottom: 12 }}>Géneros favoritos</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
           {ALL_GENRES.map((g) => (
             <GenreChip
               key={g}
               genre={g}
               selected={favoriteGenres.includes(g)}
-              onClick={() => {
-                toggleGenre(g)
-              }}
+              onClick={() => { toggleGenre(g) }}
             />
           ))}
         </div>
       </div>
 
-      <div className="mb-[14px]">
+      <div style={{ marginBottom: 14 }}>
         <label
           htmlFor="profile-directors"
-          className="font-sans text-xs text-gray-mid mb-[10px] block"
+          className="font-sans text-gray-mid"
+          style={{ fontSize: 12, display: 'block', marginBottom: 10 }}
         >
           Directores de referencia
         </label>
@@ -118,12 +118,10 @@ export default function PreferencesSection({ onToast }: PreferencesSectionProps)
           id="profile-directors"
           className="lumen-input focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           value={directorsInput}
-          onChange={(e) => {
-            setDirectorsInput(e.target.value)
-          }}
+          onChange={(e) => { setDirectorsInput(e.target.value) }}
           placeholder="Ej. Tarkovski, Bresson, Varda…"
         />
-        <p className="font-mono text-[10px] text-gray-dark tracking-[0.05em] mt-2">
+        <p className="font-mono text-gray-dark" style={{ fontSize: 10, letterSpacing: '0.05em', marginTop: 8 }}>
           Separados por coma
         </p>
       </div>
