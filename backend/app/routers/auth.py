@@ -244,8 +244,9 @@ async def refresh(request: Request, response: Response) -> RefreshResponse:
 
     session = refresh_response.session
     if session is None:
-        logger.error("auth_refresh_no_session_returned")
-        raise HTTPException(status_code=500, detail="No se pudo refrescar la sesión")
+        logger.warning("auth_refresh_no_session_returned")
+        _clear_refresh_cookie(response)
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
     # Si Supabase rota el refresh_token, lo actualizamos en la cookie.
     new_refresh: str | None = getattr(session, "refresh_token", None)

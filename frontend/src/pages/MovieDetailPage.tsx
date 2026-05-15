@@ -108,6 +108,7 @@ export default function MovieDetailPage() {
         poster_url: posterUrl,
         release_year: releaseYear,
         genre_ids: movie.genres.map((g) => g.id),
+        ...(movie.overview ? { overview: movie.overview } : {}),
         ...(note !== '' ? { initial_note: note } : {}),
       }
       try {

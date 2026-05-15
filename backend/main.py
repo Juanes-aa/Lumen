@@ -4,8 +4,9 @@ load_dotenv()  # PRIMERO, antes de cualquier import propio
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.datastructures import MutableHeaders
+from starlette.types import ASGIApp, Receive, Scope, Send
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from supabase import Client
@@ -53,18 +54,65 @@ def _rate_limit_exceeded_handler(request: Request, exc: Exception) -> JSONRespon
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 register_exception_handlers(app)
 
-# Orden de middlewares: el último añadido es el más externo. Queremos que
-# RequestIdMiddleware envuelva todo (asigna request_id antes de cualquier
-# otro middleware/handler), por lo tanto se añade al final.
+class CORSMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope["headers"])
+        origin: str = headers.get(b"origin", b"").decode()
+        allowed: list[str] = get_settings().get_cors_origins()
+        is_allowed: bool = origin in allowed
+
+        if scope["method"] == "OPTIONS" and is_allowed:
+            request_headers: str = headers.get(
+                b"access-control-request-headers", b"authorization, content-type"
+            ).decode()
+            await send({
+                "type": "http.response.start",
+                "status": 200,
+                "headers": [
+                    (b"access-control-allow-origin", origin.encode()),
+                    (b"access-control-allow-credentials", b"true"),
+                    (b"access-control-allow-methods", b"GET, POST, PUT, PATCH, DELETE, OPTIONS"),
+                    (b"access-control-allow-headers", request_headers.encode()),
+                    (b"access-control-max-age", b"600"),
+                    (b"content-length", b"0"),
+                ],
+            })
+            await send({"type": "http.response.body", "body": b""})
+            return
+
+        if not is_allowed:
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_cors(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                mutable = MutableHeaders(scope=message)
+                mutable["access-control-allow-origin"] = origin
+                mutable["access-control-allow-credentials"] = "true"
+                mutable["vary"] = "Origin"
+            await send(message)
+
+        await self.app(scope, receive, send_with_cors)
+
+
+app.add_middleware(CORSMiddleware)
 app.add_middleware(SlowAPIMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=get_settings().get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.add_middleware(RequestIdMiddleware)
+
+@app.on_event("startup")
+async def _startup_log() -> None:
+    origins = get_settings().get_cors_origins()
+    logging.getLogger(__name__).info(
+        "cors_allowed_origins count=%d values=%s", len(origins), origins
+    )
+
 
 app.include_router(auth_router)
 app.include_router(movies_router)

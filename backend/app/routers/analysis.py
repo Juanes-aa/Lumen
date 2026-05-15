@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
+
 from groq import AsyncGroq
 from supabase import Client
 
@@ -251,7 +252,11 @@ async def send_message_stream(
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 
@@ -270,7 +275,7 @@ async def get_session_suggestions(
         )
 
     title: str = str(row["movies_watched"]["title"])
-    overview: str = str(row["movies_watched"].get("overview", ""))
+    overview: str = row["movies_watched"].get("overview") or ""
 
     suggestions: list[str] = await generate_session_suggestions(title, overview, groq)
     return SuggestionsResponse(suggestions=suggestions)

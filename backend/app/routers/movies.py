@@ -48,6 +48,7 @@ async def add_watched_movie(
         "poster_url": data.poster_url,
         "release_year": data.release_year,
         "genre_ids": data.genre_ids,
+        "overview": data.overview,
         "initial_note": data.initial_note,
     }
     try:

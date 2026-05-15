@@ -15,5 +15,6 @@ export interface WatchedMoviePayload {
   poster_url: string | null;
   release_year: number | null;
   genre_ids: number[];
+  overview?: string;
   initial_note?: string;
 }

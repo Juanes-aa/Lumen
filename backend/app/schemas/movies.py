@@ -9,6 +9,7 @@ class WatchedMovieCreate(BaseModel):
     poster_url: str | None = Field(default=None, max_length=500)
     release_year: int | None = Field(default=None, ge=1888, le=2100)
     genre_ids: list[int] = Field(default_factory=list)
+    overview: str | None = Field(default=None, max_length=2000)
     initial_note: str | None = Field(default=None, max_length=500)
 
 
