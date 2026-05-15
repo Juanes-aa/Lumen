@@ -115,7 +115,7 @@ export default function MessageList({
       {isStreaming ? (
         <div className="lumen-msg-enter flex flex-col gap-[6px] max-w-[68%]">
           <span className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">Lumen</span>
-          <div className="border-l-2 border-amber pl-[14px]">
+          <div className="border-l-2 border-amber" style={{ paddingLeft: 20 }}>
             {streamingContent !== '' ? (
               renderParagraphs(streamingContent, true)
             ) : (

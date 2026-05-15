@@ -44,7 +44,7 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
   return (
     <div className="lumen-msg-enter flex flex-col gap-[6px] max-w-[68%]">
       <span className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">Lumen</span>
-      <div className="border-l-2 border-amber pl-[14px]">{renderParagraphs(message.content)}</div>
+      <div className="border-l-2 border-amber" style={{ paddingLeft: 20 }}>{renderParagraphs(message.content)}</div>
     </div>
   )
 }
