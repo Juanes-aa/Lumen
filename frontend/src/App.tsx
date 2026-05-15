@@ -16,6 +16,7 @@ const AnalysisChatPage = lazy(() => import("./pages/AnalysisChatPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const RecommendationsPage = lazy(() => import("./pages/RecommendationsPage"));
+const PlansPage = lazy(() => import("./pages/Plans"));
 
 function AppRoutes() {
   const { isReady } = useInitAuth();
@@ -43,6 +44,7 @@ function AppRoutes() {
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/planes" element={<PlansPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
