@@ -31,7 +31,7 @@ export default function ExportSection(): React.ReactElement {
   }
 
   return (
-    <section className="lumen-anim-5 lumen-section">
+    <section className="lumen-anim-5 lumen-section" style={{ marginBottom: 32 }}>
       <span className="lumen-overline" style={{ display: 'block', marginBottom: 16 }}>Exportar</span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
