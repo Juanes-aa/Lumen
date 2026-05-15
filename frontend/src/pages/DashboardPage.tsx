@@ -37,34 +37,33 @@ interface ActiveSessionCardProps {
 
 function ActiveSessionCard({ session, releaseYear, tags, onResume }: ActiveSessionCardProps): React.ReactElement {
   return (
-    <div className="bg-pantalla border-[0.5px] border-amber rounded-[10px] px-5 py-4 flex items-center gap-4 relative overflow-hidden">
+    <div
+      className="bg-pantalla border-[0.5px] border-amber"
+      style={{ borderRadius: 10, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, position: 'relative', overflow: 'hidden' }}
+    >
       <div
-        className="absolute top-[-30px] right-[-30px] w-[120px] h-[120px] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(250,199,117,0.07) 0%, transparent 70%)' }}
+        className="pointer-events-none"
+        style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'radial-gradient(circle, rgba(250,199,117,0.07) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
-      <Poster
-        url={session.movie_poster_url}
-        alt={session.movie_title}
-        width={52}
-        height={78}
-      />
-      <div className="flex-1 min-w-0">
-        <p className="font-mono text-[10px] text-amber tracking-[0.14em] uppercase mb-[5px]">
+      <Poster url={session.movie_poster_url} alt={session.movie_title} width={52} height={78} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p className="font-mono text-amber" style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 5 }}>
           En curso
         </p>
-        <p className="font-serif text-xl font-medium text-celuloide tracking-[-0.01em] mb-[3px] truncate">
+        <p className="font-serif text-celuloide" style={{ fontSize: 20, fontWeight: 500, letterSpacing: '-0.01em', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {session.movie_title}
         </p>
-        <p className="font-mono text-[10.5px] text-gray-mid tracking-[0.04em]">
+        <p className="font-mono text-gray-mid" style={{ fontSize: 10.5, letterSpacing: '0.04em' }}>
           {releaseYear !== null ? `${releaseYear} · ` : ''}Continuando sesión…
         </p>
         {tags.length > 0 ? (
-          <div className="flex gap-[6px] mt-[10px] flex-wrap">
+          <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="bg-[rgba(250,199,117,0.08)] border-[0.4px] border-[rgba(250,199,117,0.25)] rounded-[4px] text-amber font-mono text-[9.5px] px-[8px] py-[3px] tracking-[0.06em] whitespace-nowrap"
+                className="font-mono text-amber"
+                style={{ background: 'rgba(250,199,117,0.08)', border: '0.4px solid rgba(250,199,117,0.25)', borderRadius: 4, fontSize: 9.5, padding: '3px 8px', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}
               >
                 {tag}
               </span>
@@ -72,7 +71,7 @@ function ActiveSessionCard({ session, releaseYear, tags, onResume }: ActiveSessi
           </div>
         ) : null}
       </div>
-      <Button size="sm" className="shrink-0" style={{ marginLeft: 16 }} onClick={onResume}>
+      <Button size="sm" style={{ flexShrink: 0, marginLeft: 8 }} onClick={onResume}>
         Retomar
       </Button>
     </div>

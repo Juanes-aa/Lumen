@@ -16,7 +16,8 @@ interface RecentMovieCardProps {
 function RecentMovieCard({ movie, hasAnalysis, closedSessionId, onNavigate }: RecentMovieCardProps): React.ReactElement {
   return (
     <div
-      className="group bg-pantalla border-[0.4px] border-borde rounded-[10px] p-[14px] cursor-pointer text-left flex flex-col gap-[10px] transition-colors hover:border-borde-soft hover:bg-[#2A2927] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+      className="group bg-pantalla border-[0.4px] border-borde rounded-[10px] cursor-pointer transition-colors hover:border-borde-soft hover:bg-[#2A2927] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+      style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left' }}
       onClick={() => { onNavigate(`/movie/${movie.tmdb_id.toString()}`) }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') onNavigate(`/movie/${movie.tmdb_id.toString()}`)
@@ -86,12 +87,9 @@ function RecentMovieCard({ movie, hasAnalysis, closedSessionId, onNavigate }: Re
 
 function RecentSkeletonGrid(): React.ReactElement {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
       {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div
-          key={i}
-          className="aspect-[2/3] rounded-[10px] bg-pantalla-soft animate-pulse"
-        />
+        <div key={i} className="aspect-[2/3] rounded-[10px] bg-pantalla-soft animate-pulse" />
       ))}
     </div>
   )
@@ -130,11 +128,12 @@ export default function RecentMoviesRow(): React.ReactElement {
 
   return (
     <div className="lumen-anim-3">
-      <div className="flex justify-between items-baseline mb-4">
-        <p className="lumen-overline tracking-[0.16em]">Recientes</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 16 }}>
+        <p className="lumen-overline" style={{ letterSpacing: '0.16em' }}>Recientes</p>
         <button
           type="button"
-          className="lumen-btn-ghost text-[11px]"
+          className="lumen-btn-ghost"
+          style={{ fontSize: 11 }}
           onClick={() => { navigate('/library') }}
         >
           Ver todas →
@@ -145,7 +144,7 @@ export default function RecentMoviesRow(): React.ReactElement {
       ) : recentMovies.length === 0 ? (
         <EmptyDashboard />
       ) : (
-        <div className="grid grid-cols-3 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {recentMovies.map((m) => (
             <RecentMovieCard
               key={m.id}
@@ -158,7 +157,7 @@ export default function RecentMoviesRow(): React.ReactElement {
         </div>
       )}
       {hasError ? (
-        <p className="mt-4 text-xs text-warn">Error al cargar el dashboard.</p>
+        <p className="font-sans text-warn" style={{ marginTop: 16, fontSize: 12 }}>Error al cargar el dashboard.</p>
       ) : null}
     </div>
   )
