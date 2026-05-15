@@ -65,6 +65,8 @@ export function PlanCard({
         background: '#252421',
         border: isRecommended ? '0.5px solid #FAC775' : '0.4px solid #2E2D2B',
         padding: '28px 28px 24px',
+        height: '100%',
+        boxSizing: 'border-box',
       }}
     >
       {/* Badge recomendado */}
