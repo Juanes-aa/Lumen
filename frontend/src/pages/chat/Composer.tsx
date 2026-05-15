@@ -48,7 +48,7 @@ export default function Composer({ disabled, isStreaming, onSend }: ComposerProp
 
   return (
     <>
-      <div className="bg-pantalla border-[0.5px] border-borde rounded-[10px] px-[14px] py-3 flex items-end gap-[10px] transition-colors focus-within:border-amber">
+      <div className="bg-pantalla border-[0.5px] border-borde rounded-[10px] transition-colors focus-within:border-amber" style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-end', gap: 10 }}>
         <textarea
           ref={inputRef}
           rows={1}
