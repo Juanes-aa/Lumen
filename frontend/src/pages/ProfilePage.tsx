@@ -121,7 +121,7 @@ export default function ProfilePage(): React.ReactElement {
         </div>
 
         {/* Columna derecha 40% */}
-        <aside style={{ flex: '0 0 40%', padding: '0 44px 0 24px', borderLeft: '0.4px solid #2E2D2B', display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
+        <aside style={{ flex: '0 0 40%', padding: '0 44px 48px 24px', borderLeft: '0.4px solid #2E2D2B', display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
           <PreferencesSection onToast={showToast} />
           <StatsRow
             moviesCount={moviesCount}
