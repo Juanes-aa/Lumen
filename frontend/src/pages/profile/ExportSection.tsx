@@ -32,14 +32,12 @@ export default function ExportSection(): React.ReactElement {
 
   return (
     <section className="lumen-anim-5 lumen-section">
-      <span className="lumen-overline mb-4">Exportar</span>
-      <div className="flex flex-col gap-2">
+      <span className="lumen-overline" style={{ display: 'block', marginBottom: 16 }}>Exportar</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
           type="button"
           className={buttonClass()}
-          onClick={() => {
-            void handleExport('markdown')
-          }}
+          onClick={() => { void handleExport('markdown') }}
           disabled={noSessions || exportingFormat !== null}
           title={noSessions ? 'No tienes sesiones para exportar' : ''}
         >
@@ -48,20 +46,18 @@ export default function ExportSection(): React.ReactElement {
         <button
           type="button"
           className={buttonClass()}
-          onClick={() => {
-            void handleExport('json')
-          }}
+          onClick={() => { void handleExport('json') }}
           disabled={noSessions || exportingFormat !== null}
           title={noSessions ? 'No tienes sesiones para exportar' : ''}
         >
           {exportingFormat === 'json' ? 'Generando…' : 'Exportar como JSON'}
         </button>
       </div>
-      <p className="font-mono text-[10px] text-gray-dark tracking-[0.05em] mt-3">
+      <p className="font-mono text-gray-dark" style={{ fontSize: 10, letterSpacing: '0.05em', marginTop: 12 }}>
         {noSessions ? 'Sin sesiones disponibles' : 'Tu historial completo de análisis'}
       </p>
       {exportError !== null ? (
-        <p className="text-warn text-[11px] mt-2">{exportError}</p>
+        <p className="font-sans text-warn" style={{ fontSize: 11, marginTop: 8 }}>{exportError}</p>
       ) : null}
     </section>
   )
