@@ -25,7 +25,6 @@ export interface PlanCardProps {
 function CheckIcon(): React.ReactElement {
   return (
     <svg
-      className="shrink-0"
       width="15"
       height="15"
       viewBox="0 0 15 15"
@@ -58,8 +57,11 @@ export function PlanCard({
 }: PlanCardProps): React.ReactElement {
   return (
     <article
-      className="flex flex-col rounded-[10px] relative"
       style={{
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 10,
+        position: 'relative',
         background: '#252421',
         border: isRecommended ? '0.5px solid #FAC775' : '0.4px solid #2E2D2B',
         padding: '28px 28px 24px',
@@ -68,8 +70,7 @@ export function PlanCard({
       {/* Badge recomendado */}
       {isRecommended && (
         <div
-          className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: -14 }}
+          style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)' }}
         >
           <span
             className="font-mono uppercase whitespace-nowrap"
@@ -106,10 +107,7 @@ export function PlanCard({
       </div>
 
       {/* Precio */}
-      <div
-        className="flex items-baseline"
-        style={{ gap: 4, marginBottom: 10 }}
-      >
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 10 }}>
         <span
           className="font-mono text-celuloide"
           style={{ fontSize: 36, lineHeight: 1 }}
@@ -142,11 +140,10 @@ export function PlanCard({
 
       {/* Lista de features */}
       <ul
-        className="flex flex-col flex-1"
-        style={{ gap: 12, marginBottom: 24, listStyle: 'none', padding: 0 }}
+        style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 12, marginBottom: 24, listStyle: 'none', padding: 0 }}
       >
         {features.map((f) => (
-          <li key={f.text} className="flex items-start" style={{ gap: 10 }}>
+          <li key={f.text} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <CheckIcon />
             <span
               className="font-sans text-celuloide"

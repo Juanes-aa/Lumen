@@ -121,8 +121,7 @@ export default function PlansPage(): React.ReactElement {
         style={{ background: SALA, padding: '72px 24px' }}
       >
         <div
-          className="grid grid-cols-1 md:grid-cols-3"
-          style={{ maxWidth: 1080, margin: '0 auto', gap: 20 }}
+          style={{ maxWidth: 1080, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}
         >
           <PlanCard
             name="Free"
