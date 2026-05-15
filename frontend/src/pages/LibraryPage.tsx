@@ -45,11 +45,12 @@ function FilterChip({ label, active, onClick }: FilterChipProps): React.ReactEle
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-[4px] font-sans text-[11.5px] px-[11px] py-[5px] cursor-pointer transition-colors select-none border-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${
+      className={`rounded-[4px] font-sans cursor-pointer transition-colors select-none border-[0.4px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${
         active
           ? 'bg-[rgba(250,199,117,0.08)] border-amber text-celuloide'
           : 'bg-transparent border-borde text-gray-mid hover:border-borde-soft'
       }`}
+      style={{ fontSize: 11.5, padding: '5px 11px' }}
     >
       {label}
     </button>
