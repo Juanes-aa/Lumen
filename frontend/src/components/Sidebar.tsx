@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
 import { logoutUser } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
 import LumenSymbol from './LumenSymbol'
@@ -81,12 +81,12 @@ export default function Sidebar(): React.ReactElement {
               <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#888780', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Plan</span>
               <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, color: '#888780' }}>Free</span>
             </div>
-            <button
-              type="button"
-              style={{ background: 'transparent', border: '0.4px solid rgba(250,199,117,0.25)', borderRadius: 4, color: '#FAC775', fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, padding: '5px 0', cursor: 'pointer', width: '100%', textAlign: 'center' }}
+            <Link
+              to="/planes"
+              style={{ display: 'block', textAlign: 'center', textDecoration: 'none', background: 'transparent', border: '0.4px solid rgba(250,199,117,0.25)', borderRadius: 4, color: '#FAC775', fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, padding: '5px 0', cursor: 'pointer', width: '100%' }}
             >
               Upgrade →
-            </button>
+            </Link>
           </div>
         </div>
         <button
