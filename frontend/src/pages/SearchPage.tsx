@@ -4,6 +4,7 @@ import { useMovieSearch } from '../hooks/useMovieSearch'
 import { getPosterUrl } from '../services/tmdb'
 import LumenSymbol from '../components/LumenSymbol'
 import Poster from '../components/ui/Poster'
+import { useIsMobile } from '../hooks/useIsMobile'
 import type { TmdbSearchResult } from '../types/tmdb'
 
 const TMDB_GENRE_MAP: Record<number, string> = {
@@ -81,6 +82,7 @@ export default function SearchPage(): React.ReactElement {
     setActiveGenreId(null)
   }, [query])
 
+  const isMobile = useIsMobile()
   const trimmed: string = query.trim()
   const tooShort: boolean = trimmed.length < 2
   const hasSearched: boolean = !tooShort && !isLoading
@@ -107,7 +109,7 @@ export default function SearchPage(): React.ReactElement {
       <div
         className="lumen-anim-1"
         style={{
-          padding: '36px 44px 24px',
+          padding: isMobile ? '16px 16px 14px' : '36px 44px 24px',
           flexShrink: 0,
           borderBottom: !tooShort ? '0.4px solid #2E2D2B' : 'none',
         }}
@@ -126,7 +128,7 @@ export default function SearchPage(): React.ReactElement {
             type="text"
             value={query}
             onChange={(e) => { setQuery(e.target.value) }}
-            placeholder="¿Qué escena no puedes dejar de pensar?"
+            placeholder={isMobile ? 'Buscar película…' : '¿Qué escena no puedes dejar de pensar?'}
             aria-label="Buscar película"
             style={{
               background: 'transparent', border: 'none',
@@ -152,7 +154,7 @@ export default function SearchPage(): React.ReactElement {
       </div>
 
       {/* ── Contenido ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 44px 48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '20px 16px 40px' : '28px 44px 48px' }}>
 
         {error !== null ? (
           <p role="alert" className="font-sans text-warn" style={{ fontSize: 13, textAlign: 'center', paddingTop: 40 }}>
@@ -161,7 +163,7 @@ export default function SearchPage(): React.ReactElement {
         ) : null}
 
         {isLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 12 }}>
             {[0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)}
           </div>
         ) : null}
@@ -201,7 +203,7 @@ export default function SearchPage(): React.ReactElement {
                 {activeGenreId !== null ? ` · ${TMDB_GENRE_MAP[activeGenreId] ?? ''}` : ''}
               </span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 4}, 1fr)`, gap: 12 }}>
               {filtered.map((movie) => (
                 <SearchResultCard
                   key={movie.id}
