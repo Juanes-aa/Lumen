@@ -10,6 +10,7 @@ import InstructionsSection from './profile/InstructionsSection'
 import MemorySection from './profile/MemorySection'
 import PreferencesSection from './profile/PreferencesSection'
 import ExportSection from './profile/ExportSection'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 interface StatsRowProps {
   moviesCount: number
@@ -45,26 +46,31 @@ function StatsRow({ moviesCount, totalAnalyzed, activeSessionsCount, topicsCount
 }
 
 function ProfileSkeleton(): React.ReactElement {
+  const isMobile = useIsMobile()
+  const px = isMobile ? '16px' : '44px'
   return (
-    <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: `36px ${px}`, overflowY: 'auto' }}>
       <div style={{ height: 32, width: 200, background: '#252421', borderRadius: 4, marginBottom: 28 }} className="animate-pulse" />
-      <div style={{ display: 'flex', gap: 24 }}>
-        <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 24 }}>
+        <div style={{ flex: isMobile ? 'none' : '0 0 60%', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {[200, 200, 180].map((h, i) => (
             <div key={i} style={{ height: h, background: '#252421', borderRadius: 10 }} className="animate-pulse" />
           ))}
         </div>
-        <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {[180, 140, 140].map((h, i) => (
-            <div key={i} style={{ height: h, background: '#252421', borderRadius: 10 }} className="animate-pulse" />
-          ))}
-        </div>
+        {!isMobile ? (
+          <div style={{ flex: '0 0 40%', display: 'flex', flexDirection: 'column', gap: 18 }}>
+            {[180, 140, 140].map((h, i) => (
+              <div key={i} style={{ height: h, background: '#252421', borderRadius: 10 }} className="animate-pulse" />
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   )
 }
 
 export default function ProfilePage(): React.ReactElement {
+  const isMobile = useIsMobile()
   const profileQuery = useSemanticProfileQuery()
   const sessionsQuery = useSessionsQuery()
   const moviesQuery = useWatchedMoviesQuery()
@@ -95,11 +101,46 @@ export default function ProfilePage(): React.ReactElement {
   const activeSessionsCount = sessions.filter((s) => s.status === 'active').length
   const topicsCount = (profile?.temas_frecuentes ?? []).length
 
+  const px = isMobile ? '16px' : '44px'
+
+  // ── Mobile: columna única ────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 16px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <header className="lumen-anim-1">
+          <h1 className="font-serif text-celuloide" style={{ fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em', marginBottom: 4 }}>
+            Perfil
+          </h1>
+          <p className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
+            {totalAnalyzed === 0
+              ? 'Aún no tienes análisis cerrados'
+              : `${totalAnalyzed} ${totalAnalyzed === 1 ? 'película analizada' : 'películas analizadas'}`}
+          </p>
+        </header>
+        <SemanticProfileSection />
+        <PreferencesSection onToast={showToast} />
+        <InstructionsSection onToast={showToast} />
+        <MemorySection onToast={showToast} />
+        <StatsRow
+          moviesCount={moviesCount}
+          totalAnalyzed={totalAnalyzed}
+          activeSessionsCount={activeSessionsCount}
+          topicsCount={topicsCount}
+        />
+        <ExportSection />
+        {toast !== null ? (
+          <div className="lumen-toast" role="status" aria-live="polite">{toast}</div>
+        ) : null}
+      </div>
+    )
+  }
+
+  // ── Desktop: layout original intacto ────────────────────────────────────
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── Header ── */}
-      <header className="lumen-anim-1" style={{ padding: '36px 44px 28px', flexShrink: 0 }}>
+      <header className="lumen-anim-1" style={{ padding: `36px ${px} 28px`, flexShrink: 0 }}>
         <h1 className="font-serif text-celuloide" style={{ fontSize: 32, fontWeight: 500, letterSpacing: '-0.02em', marginBottom: 6 }}>
           Perfil
         </h1>
@@ -114,7 +155,7 @@ export default function ProfilePage(): React.ReactElement {
       <div style={{ display: 'flex', flex: 1, paddingBottom: 48, minHeight: 0 }}>
 
         {/* Columna izquierda 60% */}
-        <div style={{ flex: '0 0 60%', padding: '0 44px', display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
+        <div style={{ flex: '0 0 60%', padding: `0 ${px}`, display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
           <SemanticProfileSection />
           <InstructionsSection onToast={showToast} />
           <MemorySection onToast={showToast} />
