@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Poster from '../../components/ui/Poster'
 import { useSessionsQuery, useWatchedMoviesQuery } from '../../api/queries'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import type { WatchedMovie } from '../../types/library'
 import type { SessionSummary } from '../../types/analysis'
 import EmptyDashboard from './EmptyDashboard'
@@ -85,10 +86,12 @@ function RecentMovieCard({ movie, hasAnalysis, closedSessionId, onNavigate }: Re
   )
 }
 
-function RecentSkeletonGrid(): React.ReactElement {
+function RecentSkeletonGrid({ isMobile }: { isMobile: boolean }): React.ReactElement {
+  const cols = isMobile ? 2 : 3
+  const count = isMobile ? 4 : 6
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-      {[0, 1, 2, 3, 4, 5].map((i) => (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12 }}>
+      {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="aspect-[2/3] rounded-[10px] bg-pantalla-soft animate-pulse" />
       ))}
     </div>
@@ -99,9 +102,13 @@ export default function RecentMoviesRow(): React.ReactElement {
   const navigate = useNavigate()
   const moviesQuery = useWatchedMoviesQuery()
   const sessionsQuery = useSessionsQuery()
+  const isMobile = useIsMobile()
 
   const movies: WatchedMovie[] = moviesQuery.data ?? []
-  const recentMovies: WatchedMovie[] = useMemo(() => movies.slice(0, 6), [movies])
+  const recentMovies: WatchedMovie[] = useMemo(
+    () => movies.slice(0, isMobile ? 4 : 6),
+    [movies, isMobile],
+  )
 
   const analyzedTmdbIds: Set<number> = useMemo(() => {
     const set: Set<number> = new Set()
@@ -140,11 +147,11 @@ export default function RecentMoviesRow(): React.ReactElement {
         </button>
       </div>
       {isLoading ? (
-        <RecentSkeletonGrid />
+        <RecentSkeletonGrid isMobile={isMobile} />
       ) : recentMovies.length === 0 ? (
         <EmptyDashboard />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 3}, 1fr)`, gap: 12 }}>
           {recentMovies.map((m) => (
             <RecentMovieCard
               key={m.id}

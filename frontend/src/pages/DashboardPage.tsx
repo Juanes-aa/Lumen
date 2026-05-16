@@ -7,6 +7,7 @@ import Button from '../components/ui/Button'
 import RecentMoviesRow from './dashboard/RecentMoviesRow'
 import ProgressCard from './dashboard/ProgressCard'
 import RecommendationsTeaser from './dashboard/RecommendationsTeaser'
+import { useIsMobile } from '../hooks/useIsMobile'
 import type { SessionSummary } from '../types/analysis'
 import type { WatchedMovie } from '../types/library'
 
@@ -110,50 +111,75 @@ export default function DashboardPage(): React.ReactElement | null {
     return (profileQuery.data?.temas_frecuentes ?? []).slice(0, 2).map((t) => t.value)
   }, [activeSession, profileQuery.data])
 
+  const isMobile = useIsMobile()
+
   if (token === null) return null
 
+  // ── Secciones compartidas ────────────────────────────────────────────────
+  const greeting_ = greeting()
+
+  const welcomeBlock = (
+    <div className="lumen-anim-1" style={{ marginBottom: 36 }}>
+      <p className="lumen-overline" style={{ marginBottom: 8 }}>{greeting_}</p>
+      <h1
+        className="font-serif text-celuloide"
+        style={{ fontSize: isMobile ? 26 : 32, fontWeight: 500, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 8 }}
+      >
+        ¿Qué estás procesando hoy?
+      </h1>
+      <p className="font-sans text-gray-mid" style={{ fontSize: 13, lineHeight: 1.6 }}>
+        {lastClosedSession !== null ? (
+          <>
+            Última sesión {relativeTime(lastClosedSession.closed_at)} ·{' '}
+            <span className="text-celuloide">{lastClosedSession.movie_title}</span>
+          </>
+        ) : (
+          'Aún no tienes sesiones cerradas.'
+        )}
+      </p>
+    </div>
+  )
+
+  const activeBlock = activeSession !== null ? (
+    <div className="lumen-anim-2" style={{ marginBottom: 36 }}>
+      <p className="lumen-overline" style={{ marginBottom: 12 }}>Análisis en curso</p>
+      <ActiveSessionCard
+        session={activeSession}
+        releaseYear={activeMovieYear}
+        tags={activeSessionTags}
+        onResume={() => { navigate(`/analysis/${activeSession.id}`) }}
+      />
+    </div>
+  ) : null
+
+  // ── Mobile: columna única con scroll ─────────────────────────────────────
+  if (isMobile) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 20px 32px' }}>
+        {welcomeBlock}
+        {activeBlock}
+        <RecentMoviesRow />
+        <div style={{ borderTop: '0.4px solid #2E2D2B', margin: '32px 0 28px' }} />
+        <ProgressCard />
+        <div style={{ marginTop: 28 }}>
+          <RecommendationsTeaser />
+        </div>
+      </div>
+    )
+  }
+
+  // ── Desktop: layout original intacto ────────────────────────────────────
   return (
     <div style={{ display: 'flex', flex: 1, minWidth: 0, overflow: 'hidden', height: '100%' }}>
 
-      {/* ── Columna principal ── */}
+      {/* Columna principal */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '40px 40px 40px 44px' }}>
-
-        {/* Bienvenida */}
-        <div className="lumen-anim-1" style={{ marginBottom: 36 }}>
-          <p className="lumen-overline" style={{ marginBottom: 8 }}>{greeting()}</p>
-          <h1 className="font-serif text-celuloide" style={{ fontSize: 32, fontWeight: 500, lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 8 }}>
-            ¿Qué estás procesando hoy?
-          </h1>
-          <p className="font-sans text-gray-mid" style={{ fontSize: 13, lineHeight: 1.6 }}>
-            {lastClosedSession !== null ? (
-              <>
-                Última sesión {relativeTime(lastClosedSession.closed_at)} ·{' '}
-                <span className="text-celuloide">{lastClosedSession.movie_title}</span>
-              </>
-            ) : (
-              'Aún no tienes sesiones cerradas.'
-            )}
-          </p>
-        </div>
-
-        {/* Análisis activo */}
-        {activeSession !== null ? (
-          <div className="lumen-anim-2" style={{ marginBottom: 36 }}>
-            <p className="lumen-overline" style={{ marginBottom: 12 }}>Análisis en curso</p>
-            <ActiveSessionCard
-              session={activeSession}
-              releaseYear={activeMovieYear}
-              tags={activeSessionTags}
-              onResume={() => { navigate(`/analysis/${activeSession.id}`) }}
-            />
-          </div>
-        ) : null}
-
-        {/* Recientes */}
+        {welcomeBlock}
+        {activeBlock}
         <RecentMoviesRow />
       </div>
 
-      {/* ── Panel derecho ── */}
+      {/* Panel derecho */}
       <aside style={{ width: 260, flexShrink: 0, borderLeft: '0.4px solid #2E2D2B', padding: '40px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
         <ProgressCard />
         <div style={{ borderTop: '0.4px solid #2E2D2B' }} />
