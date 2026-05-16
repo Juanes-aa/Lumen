@@ -7,6 +7,7 @@ import {
 } from '../api/queries'
 import Button from '../components/ui/Button'
 import Poster from '../components/ui/Poster'
+import { useIsMobile } from '../hooks/useIsMobile'
 import type { WatchedMovie } from '../types/library'
 
 const TMDB_GENRES: Record<number, string> = {
@@ -121,6 +122,7 @@ function MovieCard({ movie, hasAnalysis, onDelete: _onDelete }: MovieCardProps):
 
 export default function LibraryPage(): React.ReactElement {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   const moviesQuery = useWatchedMoviesQuery()
   const sessionsQuery = useSessionsQuery()
@@ -178,12 +180,14 @@ export default function LibraryPage(): React.ReactElement {
     }
   }
 
+  const px = isMobile ? '16px' : '44px'
+
   if (isLoading && movies.length === 0) {
     return (
-      <div style={{ flex: 1, padding: '36px 44px', overflowY: 'auto' }}>
+      <div style={{ flex: 1, padding: `36px ${px}`, overflowY: 'auto' }}>
         <div style={{ height: 32, width: 200, background: '#252421', borderRadius: 4, marginBottom: 24 }} className="animate-pulse" />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 5}, 1fr)`, gap: 12 }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="aspect-[2/3] bg-pantalla-soft border-[0.4px] border-borde rounded-[10px] animate-pulse" />
           ))}
         </div>
@@ -193,7 +197,7 @@ export default function LibraryPage(): React.ReactElement {
 
   if (error !== null) {
     return (
-      <div style={{ flex: 1, padding: '36px 44px' }}>
+      <div style={{ flex: 1, padding: `36px ${px}` }}>
         <p role="alert" className="font-sans text-warn">{error}</p>
       </div>
     )
@@ -201,7 +205,7 @@ export default function LibraryPage(): React.ReactElement {
 
   if (movies.length === 0) {
     return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 44px', gap: 20 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: `60px ${px}`, gap: 20 }}>
         <p className="font-serif italic text-celuloide" style={{ fontSize: 22, textAlign: 'center', maxWidth: 420, lineHeight: 1.4 }}>
           Tu biblioteca empieza con la primera película que viste con intención.
         </p>
@@ -216,10 +220,10 @@ export default function LibraryPage(): React.ReactElement {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* Header + filtros */}
-      <div className="lumen-anim-1" style={{ padding: '36px 44px 0', flexShrink: 0 }}>
+      <div className="lumen-anim-1" style={{ padding: `${isMobile ? '20px' : '36px'} ${px} 0`, flexShrink: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
           <div>
-            <h1 className="font-serif text-celuloide" style={{ fontSize: 30, fontWeight: 500, letterSpacing: '-0.02em', marginBottom: 5 }}>
+            <h1 className="font-serif text-celuloide" style={{ fontSize: isMobile ? 24 : 30, fontWeight: 500, letterSpacing: '-0.02em', marginBottom: 5 }}>
               Mis películas
             </h1>
             <p className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
@@ -232,7 +236,7 @@ export default function LibraryPage(): React.ReactElement {
           </Button>
         </div>
 
-        <div className="lumen-anim-2" style={{ display: 'flex', gap: 20, paddingTop: 14, paddingBottom: 20, borderBottom: '0.4px solid #2E2D2B', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="lumen-anim-2" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 10 : 20, paddingTop: 14, paddingBottom: 20, borderBottom: '0.4px solid #2E2D2B', flexWrap: 'wrap', alignItems: isMobile ? 'flex-start' : 'center' }}>
           {presentGenres.length > 0 ? (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <FilterChip label="Todos" active={activeGenre === null} onClick={() => { setActiveGenre(null) }} />
@@ -247,7 +251,7 @@ export default function LibraryPage(): React.ReactElement {
             </div>
           ) : null}
 
-          {presentGenres.length > 0 ? (
+          {presentGenres.length > 0 && !isMobile ? (
             <div style={{ width: '0.4px', height: 18, background: '#2E2D2B', flexShrink: 0 }} aria-hidden="true" />
           ) : null}
 
@@ -258,7 +262,7 @@ export default function LibraryPage(): React.ReactElement {
           </div>
 
           {filtersAreActive ? (
-            <span className="font-mono text-gray-mid" style={{ fontSize: 10, marginLeft: 'auto' }}>
+            <span className="font-mono text-gray-mid" style={{ fontSize: 10, marginLeft: isMobile ? 0 : 'auto' }}>
               {filtered.length} resultado{filtered.length === 1 ? '' : 's'}
             </span>
           ) : null}
@@ -266,7 +270,7 @@ export default function LibraryPage(): React.ReactElement {
       </div>
 
       {/* Grid */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 44px 48px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: `20px ${px} 48px` }}>
         {filtered.length === 0 ? (
           <div style={{ paddingTop: 48 }}>
             <p className="font-serif italic text-gray-mid" style={{ fontSize: 18 }}>
@@ -274,7 +278,7 @@ export default function LibraryPage(): React.ReactElement {
             </p>
           </div>
         ) : (
-          <div className="lumen-anim-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+          <div className="lumen-anim-3" style={{ display: 'grid', gridTemplateColumns: `repeat(${isMobile ? 2 : 5}, 1fr)`, gap: 12 }}>
             {filtered.map((m) => (
               <MovieCard
                 key={m.id}
