@@ -1,3 +1,4 @@
+import { useIsMobile } from '../../hooks/useIsMobile'
 import type { ChatMessage } from './useChatStream'
 
 interface MessageBubbleProps {
@@ -30,11 +31,13 @@ export function renderParagraphs(text: string, showCaret: boolean = false): Reac
 }
 
 export default function MessageBubble({ message }: MessageBubbleProps): React.ReactElement {
+  const isMobile = useIsMobile()
+
   if (message.role === 'user') {
     return (
-      <div className="lumen-msg-enter flex justify-end">
-        <div className="bg-pantalla border-[0.4px] border-borde rounded-[10px_10px_2px_10px]" style={{ maxWidth: '62%', padding: '10px 18px' }}>
-          <p className="font-sans text-[13px] text-celuloide leading-[1.65] whitespace-pre-wrap">
+      <div className="lumen-msg-enter" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="bg-pantalla border-[0.4px] border-borde" style={{ maxWidth: isMobile ? '85%' : '62%', padding: '10px 18px', borderRadius: '10px 10px 2px 10px' }}>
+          <p className="font-sans text-celuloide" style={{ fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>
             {message.content}
           </p>
         </div>
@@ -42,8 +45,8 @@ export default function MessageBubble({ message }: MessageBubbleProps): React.Re
     )
   }
   return (
-    <div className="lumen-msg-enter flex flex-col gap-[6px] max-w-[68%]">
-      <span className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">Lumen</span>
+    <div className="lumen-msg-enter" style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: isMobile ? '92%' : '68%' }}>
+      <span className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em' }}>Lumen</span>
       <div className="border-l-2 border-amber" style={{ paddingLeft: 20 }}>{renderParagraphs(message.content)}</div>
     </div>
   )

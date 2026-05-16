@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import IconButton from '../../components/ui/IconButton'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 function SendIcon(): React.ReactElement {
   return (
@@ -28,6 +29,7 @@ interface ComposerProps {
 export default function Composer({ disabled, isStreaming, onSend }: ComposerProps): React.ReactElement {
   const [input, setInput] = useState<string>('')
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
+  const isMobile = useIsMobile()
 
   function autoResize(): void {
     const ta = inputRef.current
@@ -53,7 +55,11 @@ export default function Composer({ disabled, isStreaming, onSend }: ComposerProp
           ref={inputRef}
           rows={1}
           placeholder={
-            isStreaming ? 'Esperando respuesta…' : '¿Qué todavía estás procesando de esta película?'
+            isStreaming
+              ? 'Esperando respuesta…'
+              : isMobile
+                ? '¿Qué estás procesando?'
+                : '¿Qué todavía estás procesando de esta película?'
           }
           value={input}
           onChange={(e) => {
@@ -79,9 +85,11 @@ export default function Composer({ disabled, isStreaming, onSend }: ComposerProp
           disabled={sendDisabled}
         />
       </div>
-      <p className="mt-[7px] font-mono text-[10px] text-gray-dark tracking-[0.05em] text-center">
-        Enter para enviar · Shift+Enter nueva línea
-      </p>
+      {!isMobile ? (
+        <p className="mt-[7px] font-mono text-[10px] text-gray-dark tracking-[0.05em] text-center">
+          Enter para enviar · Shift+Enter nueva línea
+        </p>
+      ) : null}
     </>
   )
 }

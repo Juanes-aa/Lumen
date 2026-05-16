@@ -3,6 +3,7 @@ import Poster from '../../components/ui/Poster'
 import MessageBubble, { renderParagraphs } from './MessageBubble'
 import StreamingIndicator from './StreamingIndicator'
 import SuggestionChips from './SuggestionChips'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import type { ChatMessage } from './useChatStream'
 import type { SessionSummary } from '../../types/analysis'
 
@@ -32,6 +33,8 @@ export default function MessageList({
   onPickSuggestion,
 }: MessageListProps): React.ReactElement {
   const endRef = useRef<HTMLDivElement | null>(null)
+  const isMobile = useIsMobile()
+  const px = isMobile ? '16px' : '40px'
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -41,7 +44,7 @@ export default function MessageList({
 
   if (isLoadingHistory) {
     return (
-      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: `20px ${px}`, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {[0, 1].map((i) => (
           <div key={i} className="rounded-[10px] bg-pantalla-soft border-[0.4px] border-borde animate-pulse" style={{ height: 60 }} />
         ))}
@@ -50,7 +53,7 @@ export default function MessageList({
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: '28px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <div style={{ flex: 1, overflowY: 'auto', padding: `20px ${px} 16px`, display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Empty state with film context + suggestions */}
       {isEmpty ? (
         <div className="lumen-fade-in mt-auto pb-2">
@@ -113,7 +116,7 @@ export default function MessageList({
 
       {/* Streaming bubble */}
       {isStreaming ? (
-        <div className="lumen-msg-enter flex flex-col gap-[6px] max-w-[68%]">
+        <div className="lumen-msg-enter" style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: isMobile ? '92%' : '68%' }}>
           <span className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">Lumen</span>
           <div className="border-l-2 border-amber" style={{ paddingLeft: 20 }}>
             {streamingContent !== '' ? (

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Poster from '../../components/ui/Poster'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import type { SessionSummary } from '../../types/analysis'
 
 interface ChatHeaderProps {
@@ -18,24 +19,25 @@ export default function ChatHeader({
   onConfirmClose,
 }: ChatHeaderProps): React.ReactElement {
   const [showCloseConfirm, setShowCloseConfirm] = useState<boolean>(false)
+  const isMobile = useIsMobile()
   const isClosed: boolean = session?.status === 'closed'
   const closeDisabled: boolean = messagesCount === 0 || isStreaming || isClosing
 
   return (
-    <header style={{ padding: '0 32px', borderBottom: '0.4px solid #2E2D2B', height: 64, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+    <header style={{ padding: isMobile ? '0 14px' : '0 32px', borderBottom: '0.4px solid #2E2D2B', height: 56, display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
       <Poster
         url={session?.movie_poster_url ?? null}
         alt={session?.movie_title ?? 'Película'}
-        width={32}
-        height={48}
+        width={28}
+        height={42}
       />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-3">
-          <span className="font-serif text-[19px] font-medium text-celuloide tracking-[-0.01em] whitespace-nowrap overflow-hidden text-ellipsis max-w-[340px]">
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <span className="font-serif text-celuloide" style={{ fontSize: isMobile ? 15 : 19, fontWeight: 500, letterSpacing: '-0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: isMobile ? 160 : 340 }}>
             {session?.movie_title ?? 'Cargando…'}
           </span>
         </div>
-        <div className="flex items-center gap-2 mt-[2px]">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
           <span className="font-mono text-[10px] text-gray-mid tracking-[0.06em] uppercase">
             Analizando con Lumen
           </span>
@@ -64,16 +66,17 @@ export default function ChatHeader({
       </div>
 
       {!isClosed ? (
-        <div className="relative">
+        <div style={{ position: 'relative' }}>
           <button
             type="button"
             onClick={() => {
               setShowCloseConfirm(true)
             }}
             disabled={closeDisabled}
-            className="bg-transparent border-none text-gray-mid font-sans text-[12px] cursor-pointer px-2 py-[5px] rounded-[4px] transition-colors hover:not-disabled:text-celuloide hover:not-disabled:bg-pantalla disabled:opacity-45 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+            className="bg-transparent border-none text-gray-mid font-sans cursor-pointer rounded-[4px] transition-colors hover:not-disabled:text-celuloide hover:not-disabled:bg-pantalla disabled:opacity-45 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+            style={{ fontSize: 11.5, padding: '5px 8px' }}
           >
-            {isClosing ? 'Cerrando…' : 'Cerrar sesión'}
+            {isClosing ? 'Cerrando…' : isMobile ? 'Cerrar' : 'Cerrar sesión'}
           </button>
           {showCloseConfirm ? (
             <div

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
+import { useIsMobile } from '../hooks/useIsMobile'
 import { getSessionMessages, getSessions, getSuggestions } from '../api/analysis'
 import {
   useCloseSessionMutation,
@@ -81,6 +82,7 @@ export default function AnalysisChatPage(): React.ReactElement {
     })
   }
 
+  const isMobile = useIsMobile()
   const isClosed: boolean = session?.status === 'closed'
   const error: string | null =
     loadError !== null
@@ -117,7 +119,7 @@ export default function AnalysisChatPage(): React.ReactElement {
       {/* Input area */}
       <div
         style={{
-          padding: '16px 40px 20px',
+          padding: isMobile ? '10px 14px 14px' : '16px 40px 20px',
           flexShrink: 0,
           borderTop: stream.messages.length > 0 ? '0.4px solid #2E2D2B' : 'none',
         }}
