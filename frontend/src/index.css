@@ -39,6 +39,11 @@ body,
   height: 100%;
 }
 
+/* Habilita safe-area-inset en iOS notched devices */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background: #1A1917;
   color: #FAF9F6;
