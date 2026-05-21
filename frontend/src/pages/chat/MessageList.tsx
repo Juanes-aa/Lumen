@@ -56,8 +56,8 @@ export default function MessageList({
     <div style={{ flex: 1, overflowY: 'auto', padding: `20px ${px} 16px`, display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Empty state with film context + suggestions */}
       {isEmpty ? (
-        <div className="lumen-fade-in mt-auto pb-2">
-          <div className="flex items-center gap-5 mb-10 pb-6 border-b-[0.4px] border-borde">
+        <div className="lumen-fade-in" style={{ marginTop: 'auto', paddingBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 40, paddingBottom: 24, borderBottom: '0.4px solid #2E2D2B' }}>
             <Poster
               url={session?.movie_poster_url ?? null}
               alt={session?.movie_title ?? 'Película'}

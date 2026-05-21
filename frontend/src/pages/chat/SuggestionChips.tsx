@@ -13,11 +13,12 @@ export default function SuggestionChips({
 }: SuggestionChipsProps): React.ReactElement | null {
   if (isLoading) {
     return (
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
         {[0, 1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-[30px] w-[130px] rounded-[4px] bg-pantalla-soft border-[0.4px] border-borde animate-pulse"
+            className="bg-pantalla-soft border-[0.4px] border-borde animate-pulse"
+            style={{ height: 30, width: 130, borderRadius: 4 }}
           />
         ))}
       </div>
@@ -25,16 +26,15 @@ export default function SuggestionChips({
   }
   if (suggestions.length === 0) return null
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
       {suggestions.map((s) => {
         const used: boolean = usedSuggestions.has(s)
         return (
           <button
             key={s}
             type="button"
-            className={`lumen-chip-suggestion focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber ${
-              used ? 'opacity-40 pointer-events-none' : ''
-            }`}
+            className="lumen-chip-suggestion focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+            style={{ opacity: used ? 0.4 : 1, pointerEvents: used ? 'none' : 'auto' }}
             onClick={() => {
               onPick(s)
             }}
