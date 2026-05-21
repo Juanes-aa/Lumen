@@ -65,24 +65,24 @@ export default function MessageList({
               height={80}
             />
             <div>
-              <p className="font-serif italic text-[22px] font-normal text-celuloide mb-[6px]">
+              <p className="font-serif italic text-celuloide" style={{ fontSize: 22, fontWeight: 400, marginBottom: 6 }}>
                 {session?.movie_title ?? '—'}
               </p>
-              <p className="font-mono text-[11px] text-gray-mid tracking-[0.06em]">
+              <p className="font-mono text-gray-mid" style={{ fontSize: 11, letterSpacing: '0.06em' }}>
                 Sesión activa
               </p>
             </div>
           </div>
 
           <div>
-            <p className="lumen-overline mb-[14px]">Por dónde empezar</p>
+            <p className="lumen-overline" style={{ marginBottom: 14 }}>Por dónde empezar</p>
             <SuggestionChips
               suggestions={suggestions}
               usedSuggestions={usedSuggestions}
               isLoading={isLoadingSuggestions}
               onPick={onPickSuggestion}
             />
-            <p className="font-sans text-[11.5px] text-gray-dark leading-[1.5]">
+            <p className="font-sans text-gray-dark" style={{ fontSize: 11.5, lineHeight: 1.5 }}>
               O escribe directamente. Las sugerencias son opcionales.
             </p>
           </div>
@@ -93,7 +93,7 @@ export default function MessageList({
       {messages.length > 0 ? (
         <>
           {messages.length === 1 ? (
-            <div className="flex items-center gap-[10px] opacity-50">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, opacity: 0.5 }}>
               <Poster
                 url={session?.movie_poster_url ?? null}
                 alt={session?.movie_title ?? 'Película'}
@@ -101,7 +101,7 @@ export default function MessageList({
                 height={42}
               />
               <div>
-                <p className="font-serif text-[14px] text-celuloide">
+                <p className="font-serif text-celuloide" style={{ fontSize: 14 }}>
                   {session?.movie_title ?? '—'}
                 </p>
               </div>
@@ -129,8 +129,8 @@ export default function MessageList({
       ) : null}
 
       {isClosed && messages.length > 0 ? (
-        <div className="text-center py-4 border-t-[0.4px] border-borde mt-2">
-          <p className="font-mono text-[10.5px] text-gray-dark tracking-[0.06em]">Sesión cerrada</p>
+        <div style={{ textAlign: 'center', padding: '16px 0', borderTop: '0.4px solid #2E2D2B', marginTop: 8 }}>
+          <p className="font-mono text-gray-dark" style={{ fontSize: 10.5, letterSpacing: '0.06em' }}>Sesión cerrada</p>
         </div>
       ) : null}
 
