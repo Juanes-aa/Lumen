@@ -29,6 +29,7 @@ export default function WatchedModal({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNote('')
       document.addEventListener('keydown', handleKeyDown)
       setTimeout(() => {

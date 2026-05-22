@@ -50,17 +50,13 @@ async def test_register_success(mock_get_client: MagicMock) -> None:
 
     assert response.status_code == 201
     data: dict[str, str] = response.json()
-    assert data["user_id"] == "fake-uuid-123"
+    # Registro ahora devuelve RegisterPendingResponse (no auto-login)
+    assert data["status"] == "verification_pending"
     assert data["email"] == "new@example.com"
-    assert data["username"] == "testuser"
-    assert data["access_token"] == "fake-access"
-    # refresh_token ya no se devuelve en el body
-    assert "refresh_token" not in data
-    # Debe venir como cookie HttpOnly
-    assert response.cookies.get("refresh_token") == "fake-refresh"
-    set_cookie_header: str = response.headers.get("set-cookie", "")
-    assert "HttpOnly" in set_cookie_header
-    assert "Path=/auth" in set_cookie_header
+    # No hay access_token ni cookie de sesión en el registro
+    assert "access_token" not in data
+    assert "user_id" not in data
+    assert response.cookies.get("refresh_token") is None
 
 
 @pytest.mark.asyncio

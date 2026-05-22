@@ -64,7 +64,7 @@ interface MovieCardProps {
   onDelete: () => void
 }
 
-function MovieCard({ movie, hasAnalysis, onDelete: _onDelete }: MovieCardProps): React.ReactElement {
+function MovieCard({ movie, hasAnalysis }: MovieCardProps): React.ReactElement {
   return (
     <div
       className="group bg-pantalla border-[0.4px] border-borde rounded-[8px] overflow-hidden cursor-pointer transition-colors hover:border-borde-soft"

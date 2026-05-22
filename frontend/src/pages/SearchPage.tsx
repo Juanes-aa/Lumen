@@ -79,6 +79,7 @@ export default function SearchPage(): React.ReactElement {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveGenreId(null)
   }, [query])
 

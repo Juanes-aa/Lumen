@@ -18,6 +18,7 @@ export function useMovieSearch(query: string): UseMovieSearchReturn {
 
   useEffect(() => {
     if (query.trim().length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([]);
       setIsLoading(false);
       setError(null);

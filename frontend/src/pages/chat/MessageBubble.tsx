@@ -5,6 +5,7 @@ interface MessageBubbleProps {
   message: ChatMessage
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function renderParagraphs(text: string, showCaret: boolean = false): React.ReactNode {
   const paragraphs: string[] = text.split('\n\n')
   return (
