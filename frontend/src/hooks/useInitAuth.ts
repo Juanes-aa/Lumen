@@ -9,22 +9,15 @@ interface StoredUser {
 }
 
 const USER_KEY: string = "lumen_user";
+const REFRESH_INTERVAL_MS = 25 * 60 * 1000; // 25 minutos (token expira en 1h)
 
 function readStoredUser(): StoredUser | null {
-  // Intentar localStorage primero (nuevo), luego sessionStorage (legado)
-  const sources = [
-    () => localStorage.getItem(USER_KEY),
-    () => localStorage.getItem("ct_user"),
-    () => sessionStorage.getItem("ct_user"),
-  ];
-  for (const read of sources) {
-    const raw = read();
-    if (raw !== null) {
-      try {
-        return JSON.parse(raw) as StoredUser;
-      } catch {
-        // ignorar entradas corruptas
-      }
+  const raw = localStorage.getItem(USER_KEY);
+  if (raw !== null) {
+    try {
+      return JSON.parse(raw) as StoredUser;
+    } catch {
+      // ignorar entradas corruptas
     }
   }
   return null;
@@ -36,20 +29,21 @@ export function useInitAuth(): { isReady: boolean } {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useEffect(() => {
-    refreshToken()
-      .then((response) => {
-        // El refresh devuelve datos del usuario: sesión completamente restaurable
-        setAuth(
-          {
-            user_id: response.user_id,
-            email: response.email,
-            username: response.username,
-          },
-          response.access_token,
-        );
-      })
+    async function doRefresh(): Promise<void> {
+      const response = await refreshToken();
+      setAuth(
+        {
+          user_id: response.user_id,
+          email: response.email,
+          username: response.username,
+        },
+        response.access_token,
+      );
+    }
+
+    // Carga inicial: intentar refresh; si falla, intentar restaurar desde localStorage.
+    doRefresh()
       .catch(() => {
-        // Refresh falló (cookie expirada, cross-origin bloqueado, sin red…)
         const storedUser = readStoredUser();
         if (storedUser === null) {
           clearAuth();
@@ -63,6 +57,18 @@ export function useInitAuth(): { isReady: boolean } {
       .finally(() => {
         setIsReady(true);
       });
+
+    // Refresco periódico cada 25 min para mantener el access_token activo.
+    // Si el refresh falla (cookie expirada, logout en otra pestaña), cierra sesión.
+    const intervalId = setInterval(() => {
+      doRefresh().catch(() => {
+        clearAuth();
+      });
+    }, REFRESH_INTERVAL_MS);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { isReady };

@@ -4,7 +4,7 @@ Toda función que accede a datos de un usuario recibe `user_id` y aplica
 `.eq("user_id", user_id)` dentro del repo. Filtrado en el router queda prohibido.
 Las queries filtran por `deleted_at IS NULL` para excluir sesiones soft-deleted.
 """
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from supabase import AsyncClient
 
@@ -52,15 +52,20 @@ async def get_session_with_status(
 
 
 async def list_user_sessions(
-    client: AsyncClient, user_id: str
+    client: AsyncClient, user_id: str, *, limit: int = 100
 ) -> list[AnalysisSessionListItemRow]:
-    """Lista sesiones del usuario con join a movies_watched, orden desc por started_at."""
+    """Lista sesiones del usuario con join a movies_watched, orden desc por started_at.
+
+    El parámetro ``limit`` previene cargas sin límite a medida que el usuario
+    acumula sesiones. Default 100 para no romper callers existentes.
+    """
     result = await (
         client.table("analysis_sessions")
         .select("*, movies_watched(title, poster_url)")
         .eq("user_id", user_id)
         .is_("deleted_at", "null")
         .order("started_at", desc=True)
+        .limit(limit)
         .execute()
     )
     return result.data
@@ -130,7 +135,7 @@ async def delete_session_cascade(
     Las queries filtran por `deleted_at IS NULL`, así que la sesión desaparece
     de todas las listas sin perder la integridad referencial de tags y mensajes.
     """
-    deleted_at = datetime.now(timezone.utc).isoformat()
+    deleted_at = datetime.now(UTC).isoformat()
     await (
         client.table("analysis_sessions")
         .update({"deleted_at": deleted_at})

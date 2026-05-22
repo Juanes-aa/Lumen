@@ -1,7 +1,9 @@
+import asyncio
 import json
 import logging
+import random
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from supabase import AsyncClient
 
@@ -350,8 +352,14 @@ async def build_user_profile(user_id: str, supabase: AsyncClient) -> None:
             "narrativa_predominante": narrativas.most_common(1)[0][0] if narrativas else None,
             "nivel_filosofico_promedio": _mode(nivel_filosofico_values),
             "total_sesiones_analizadas": len(session_ids),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
+
+        # Jitter aleatorio antes del upsert para reducir la probabilidad de que
+        # dos background tasks concurrentes (ej. dos sesiones cerradas casi
+        # simultáneamente) sobreescriban el perfil con datos parciales.
+        # Mitiga la race condition sin necesidad de un lock distribuido.
+        await asyncio.sleep(random.uniform(0, 1.5))
 
         await (
             supabase.table("user_profile")

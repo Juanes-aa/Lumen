@@ -9,7 +9,6 @@ from app.config import get_settings
 from app.dependencies.auth import get_current_user_id
 from app.dependencies.rate_limit import limiter
 from app.dependencies.supabase import get_supabase_admin
-from app.utils.async_supabase import run_sync
 from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
@@ -17,10 +16,10 @@ from app.schemas.auth import (
     RefreshResponse,
     RegisterPendingResponse,
     RegisterRequest,
-    RegisterResponse,
     ResendVerificationRequest,
     ResetPasswordRequest,
 )
+from app.utils.async_supabase import run_sync
 
 logger: logging.Logger = logging.getLogger(__name__)
 

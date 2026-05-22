@@ -8,10 +8,12 @@ get_llm_provider() — sin tocar servicios ni routers.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncGenerator
 from functools import lru_cache
 from typing import Protocol, runtime_checkable
 
+from fastapi import HTTPException
 from groq import AsyncGroq
 
 from app.dependencies.groq_client import get_groq_client
@@ -54,13 +56,22 @@ class GroqProvider:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> str:
-        response = await self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=False,
-        )
+        try:
+            response = await asyncio.wait_for(
+                self._client.chat.completions.create(
+                    model=self._model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    stream=False,
+                ),
+                timeout=30.0,
+            )
+        except TimeoutError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail="El modelo tardó demasiado en responder",
+            ) from exc
         return response.choices[0].message.content or ""
 
     async def stream(
@@ -70,12 +81,17 @@ class GroqProvider:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
-        response_stream = await self._client.chat.completions.create(
-            model=self._model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
+        # Timeout en la conexión inicial; los tokens individuales se controlan
+        # desde el caller (event_stream captura asyncio.TimeoutError).
+        response_stream = await asyncio.wait_for(
+            self._client.chat.completions.create(
+                model=self._model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+            ),
+            timeout=60.0,
         )
         async for chunk in response_stream:
             token: str | None = chunk.choices[0].delta.content

@@ -1,8 +1,10 @@
 from dotenv import load_dotenv
+
 load_dotenv()  # PRIMERO, antes de cualquier import propio
 
 import logging
 import os
+from datetime import UTC
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,18 +12,18 @@ from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.routers.auth import router as auth_router
-from app.routers.movies import router as movies_router
-from app.routers.analysis import router as analysis_router
-from app.routers.profile import router as profile_router
-from app.routers.recommendations import router as recommendations_router
-from app.routers.export import router as export_router
-from app.routers.tmdb import router as tmdb_router
 from app.config import get_settings, validate_critical_settings
 from app.dependencies.rate_limit import limiter
 from app.dependencies.supabase import get_supabase_admin_data
 from app.exceptions import register_exception_handlers
 from app.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
+from app.routers.analysis import router as analysis_router
+from app.routers.auth import router as auth_router
+from app.routers.export import router as export_router
+from app.routers.movies import router as movies_router
+from app.routers.profile import router as profile_router
+from app.routers.recommendations import router as recommendations_router
+from app.routers.tmdb import router as tmdb_router
 
 # ── Sentry (opcional: solo se activa si SENTRY_DSN está definido) ─────────────
 _sentry_dsn: str = os.getenv("SENTRY_DSN", "")
@@ -92,11 +94,42 @@ async def _startup_log() -> None:
     settings = get_settings()
     validate_critical_settings(settings)
     origins = settings.get_cors_origins()
-    logging.getLogger(__name__).info(
+    _log = logging.getLogger(__name__)
+    _log.info(
         "cors_allowed_origins count=%d values=%s", len(origins), origins
     )
     # Precalentamos el singleton async para que el primer request no pague el costo.
-    get_supabase_admin_data()
+    admin = get_supabase_admin_data()
+
+    # ── Reclamar jobs stuck ────────────────────────────────────────────────────
+    # Si el proceso fue reiniciado (deploy, crash) mientras había jobs en estado
+    # 'running', esos jobs quedan colgados para siempre. Al arrancar los marcamos
+    # como 'failed' para que quede registro auditable. Los jobs were dispatched
+    # as BackgroundTasks — no hay forma automática de reintentarlos, pero al
+    # menos el estado en DB es correcto.
+    from datetime import datetime, timedelta
+
+    from app.repositories import jobs as jobs_repo
+
+    try:
+        cutoff = (datetime.now(UTC) - timedelta(minutes=10)).isoformat()
+        stuck_result = await (
+            admin.table("background_jobs")
+            .select("id")
+            .eq("status", "running")
+            .lt("started_at", cutoff)
+            .execute()
+        )
+        if stuck_result.data:
+            _log.warning(
+                "startup_reclaim_stuck_jobs count=%d", len(stuck_result.data)
+            )
+            for job in stuck_result.data:
+                await jobs_repo.mark_failed(
+                    admin, str(job["id"]), "reclaimed_on_startup"
+                )
+    except Exception:
+        _log.exception("startup_reclaim_stuck_jobs_failed — continuing startup")
 
 
 app.include_router(auth_router)

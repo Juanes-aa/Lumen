@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -15,7 +15,7 @@ FAKE_SESSION_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 FAKE_MOVIE_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 OTHER_USER_ID = "bbbbbbbb-0000-0000-0000-000000000002"
 
-_STARTED_AT: str = datetime(2025, 1, 1, tzinfo=timezone.utc).isoformat()
+_STARTED_AT: str = datetime(2025, 1, 1, tzinfo=UTC).isoformat()
 
 MOVIE_ROW: dict[str, object] = {
     "id": FAKE_MOVIE_ID,

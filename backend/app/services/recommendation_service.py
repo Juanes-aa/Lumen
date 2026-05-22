@@ -199,7 +199,7 @@ async def generate_recommendations(
     )
 
     results: list[dict[str, Any]] = []
-    for (title, year, reason, themes), tmdb in zip(parsed_items, tmdb_results):
+    for (_title, _year, reason, themes), tmdb in zip(parsed_items, tmdb_results, strict=False):
         if tmdb is None:
             continue
         results.append(

@@ -8,8 +8,6 @@ from app.dependencies.auth import get_current_user_id
 from app.dependencies.supabase import get_supabase_admin, get_supabase_user
 from app.repositories import memory as memory_repo
 from app.repositories import profile as profile_repo
-from app.utils.async_supabase import run_sync
-from app.utils.rows import get_int, get_list_str, get_str
 from app.schemas.profile import (
     DeleteAccountRequest,
     InstructionsRequest,
@@ -22,6 +20,8 @@ from app.schemas.profile import (
     SemanticProfileResponse,
     TopItem,
 )
+from app.utils.async_supabase import run_sync
+from app.utils.rows import get_int, get_list_str, get_str
 
 logger: logging.Logger = logging.getLogger(__name__)
 

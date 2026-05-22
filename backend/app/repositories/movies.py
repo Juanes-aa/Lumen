@@ -13,13 +13,20 @@ async def add_watched(
     return response.data[0]
 
 
-async def list_watched(client: AsyncClient, user_id: str) -> list[MovieWatchedRow]:
-    """Lista las películas vistas del usuario, ordenadas desc por created_at."""
+async def list_watched(
+    client: AsyncClient, user_id: str, *, limit: int = 100
+) -> list[MovieWatchedRow]:
+    """Lista las películas vistas del usuario, ordenadas desc por created_at.
+
+    El parámetro ``limit`` previene cargas sin límite a medida que el usuario
+    acumula películas. Default 100 para no romper callers existentes.
+    """
     response = await (
         client.table("movies_watched")
         .select("*")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
+        .limit(limit)
         .execute()
     )
     return response.data

@@ -18,17 +18,12 @@ Key functions:
 
 from __future__ import annotations
 
-import os
-
 import jwt as pyjwt
 from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-
-def _is_enabled() -> bool:
-    raw: str = os.getenv("RATE_LIMIT_ENABLED", "true").strip().lower()
-    return raw not in ("0", "false", "no", "off")
+from app.config import get_settings
 
 
 def get_user_id_or_ip(request: Request) -> str:
@@ -55,14 +50,14 @@ def get_user_id_or_ip(request: Request) -> str:
 
 
 def _make_limiter() -> Limiter:
-    redis_url: str | None = os.getenv("REDIS_URL")
+    settings = get_settings()
     kwargs: dict = {
         "key_func": get_remote_address,
-        "enabled": _is_enabled(),
+        "enabled": settings.rate_limit_enabled,
         "default_limits": [],
     }
-    if redis_url:
-        kwargs["storage_uri"] = redis_url
+    if settings.redis_url:
+        kwargs["storage_uri"] = settings.redis_url
     return Limiter(**kwargs)
 
 

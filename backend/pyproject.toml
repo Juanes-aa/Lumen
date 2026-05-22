@@ -9,6 +9,10 @@ ignore = [
     "E501",  # line too long — los mocks en tests tienen cadenas largas inevitables
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"main.py" = ["E402"]
+"tests/*.py" = ["E402"]
+
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
 

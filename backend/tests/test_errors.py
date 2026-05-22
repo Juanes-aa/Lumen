@@ -10,9 +10,8 @@ from httpx import ASGITransport, AsyncClient
 from postgrest.exceptions import APIError as PostgrestAPIError
 from supabase_auth.errors import AuthApiError
 
-from app.dependencies.supabase import get_supabase_admin, get_supabase_user
+from app.dependencies.supabase import get_supabase_user
 from main import app
-
 
 # ── Request ID middleware ─────────────────────────────────────────────
 

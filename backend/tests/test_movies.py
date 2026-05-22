@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -31,7 +31,7 @@ INSERTED_ROW: dict[str, object] = {
     "release_year": 1999,
     "genre_ids": [18, 53],
     "initial_note": "Great movie",
-    "created_at": datetime(2025, 1, 1, tzinfo=timezone.utc).isoformat(),
+    "created_at": datetime(2025, 1, 1, tzinfo=UTC).isoformat(),
 }
 
 
@@ -59,28 +59,12 @@ def _mock_insert_duplicate() -> MagicMock:
 
 def _mock_select(rows: list[dict[str, object]]) -> MagicMock:
     mock: MagicMock = MagicMock()
-    (
-        mock.table.return_value
-        .select.return_value
-        .eq.return_value
-        .order.return_value
-        .execute.return_value
-        .data
-    ) == rows
     mock.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value.data = rows
     return mock
 
 
 def _mock_delete(rows: list[dict[str, object]]) -> MagicMock:
     mock: MagicMock = MagicMock()
-    (
-        mock.table.return_value
-        .delete.return_value
-        .eq.return_value
-        .eq.return_value
-        .execute.return_value
-        .data
-    ) == rows
     mock.table.return_value.delete.return_value.eq.return_value.eq.return_value.execute.return_value.data = rows
     return mock
 

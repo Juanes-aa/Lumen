@@ -19,7 +19,6 @@ from app.config import (
 )
 from main import app
 
-
 # ── JWT: rechazo de algoritmos no-ES256 ────────────────────────────────
 
 

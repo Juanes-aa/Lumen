@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from supabase import AsyncClient
@@ -81,7 +81,7 @@ async def generate_new_recommendations(
     )
 
     saved: list[RecommendationOut] = []
-    now: str = datetime.now(timezone.utc).isoformat()
+    now: str = datetime.now(UTC).isoformat()
 
     for item in items:
         inserted = await recs_repo.insert_recommendation(

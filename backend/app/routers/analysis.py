@@ -1,11 +1,10 @@
 import json
 import logging
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
-
 from supabase import AsyncClient
 
 from app.dependencies.auth import get_current_user_id
@@ -31,12 +30,11 @@ from app.schemas.analysis import (
     SessionSummaryListResponse,
     SuggestionsResponse,
 )
-from app.services import chat_service
+from app.services import chat_service, tier_service
 from app.services.ai_service import (
     extract_semantic_tags,
     generate_session_suggestions,
 )
-from app.services import tier_service
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -150,7 +148,7 @@ async def close_session(
             detail="La sesión no tiene mensajes de usuario",
         )
 
-    closed_at: str = datetime.now(timezone.utc).isoformat()
+    closed_at: str = datetime.now(UTC).isoformat()
     await sessions_repo.close_session(supabase, session_id, user_id, closed_at)
 
     # Admin async client para background task (bypassea RLS, no necesita JWT del usuario).
@@ -235,8 +233,12 @@ async def send_message_stream(
                 detail="Has alcanzado el límite diario de mensajes de tu plan",
             )
 
+    # persist_user_message=False: el mensaje del usuario se persiste solo tras el
+    # primer token del LLM para evitar mensajes huérfanos si Groq falla antes
+    # de responder.
     messages = await chat_service.build_chat_payload(
-        client, session_id, user_id, data.content
+        client, session_id, user_id, data.content,
+        persist_user_message=False,
     )
 
     # Registra reconexiones SSE (Last-Event-ID presente = cliente reconectando).
@@ -247,10 +249,15 @@ async def send_message_stream(
     async def event_stream() -> AsyncGenerator[str, None]:
         full_response: str = ""
         event_id: int = 0
+        user_message_saved: bool = False
         # retry hint: 3s entre reconexiones
         yield "retry: 3000\n\n"
         try:
             async for token in provider.stream(messages):
+                # Persistir el mensaje del usuario en el primer token confirmado
+                if not user_message_saved:
+                    await messages_repo.insert_message(client, session_id, "user", data.content)
+                    user_message_saved = True
                 full_response += token
                 yield f"id: {event_id}\ndata: {json.dumps({'token': token})}\n\n"
                 event_id += 1
@@ -267,6 +274,9 @@ async def send_message_stream(
                 )
             else:
                 yield f"id: {event_id}\ndata: " + json.dumps({"error": "Respuesta vacía del modelo"}) + "\n\n"
+        except TimeoutError:
+            logger.warning("send_message_stream_timeout session_id=%s", session_id)
+            yield f"id: {event_id}\ndata: " + json.dumps({"error": "El modelo tardó demasiado en responder"}) + "\n\n"
         except Exception:
             logger.exception("send_message_stream_error session_id=%s", session_id)
             yield f"id: {event_id}\ndata: " + json.dumps({"error": "Error generando respuesta"}) + "\n\n"
@@ -283,7 +293,9 @@ async def send_message_stream(
 
 
 @router.get("/sessions/{session_id}/suggestions", response_model=SuggestionsResponse)
+@limiter.limit("20/minute", key_func=get_user_id_or_ip)
 async def get_session_suggestions(
+    request: Request,
     session_id: str,
     user_id: str = Depends(get_current_user_id),
     client: AsyncClient = Depends(get_supabase_user),
@@ -346,7 +358,7 @@ async def delete_analysis_session(
 
     try:
         await sessions_repo.delete_session_cascade(supabase, session_id, user_id)
-    except Exception:
+    except Exception as exc:
         logger.exception(
             "delete_session_cascade_failed session_id=%s user_id=%s",
             session_id,
@@ -355,6 +367,6 @@ async def delete_analysis_session(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al eliminar la sesión",
-        )
+        ) from exc
 
     return {"message": "Session deleted successfully"}

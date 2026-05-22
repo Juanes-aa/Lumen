@@ -8,18 +8,20 @@ Dos modos de acceso:
 * ``get_supabase_admin_data()`` — cliente **async** con ``service_role_key``.
   Bypassea RLS. Usado para operaciones PostgREST en background tasks.
 
-* ``get_supabase_user(request)`` — cliente **async** per-request con ``anon_key``
+* ``get_supabase_user(request)`` — **async generator** per-request con ``anon_key``
   + JWT del usuario propagado a PostgREST. Las políticas RLS evalúan
   ``auth.uid()`` contra el ``sub`` del JWT, garantizando aislamiento entre usuarios.
+  El cliente se cierra en el bloque ``finally`` para liberar la sesión HTTP
+  subyacente y evitar fugas de file descriptors bajo carga.
 """
 
+from collections.abc import AsyncGenerator
 from functools import lru_cache
 
 from fastapi import HTTPException, Request, status
 from supabase import AsyncClient, Client, create_client
 
 from app.config import get_settings
-
 
 # ── Sync admin client (GoTrue auth — métodos sync de supabase_auth) ──────────
 
@@ -34,7 +36,11 @@ def get_supabase_admin() -> Client:
 
 @lru_cache(maxsize=1)
 def get_supabase_admin_data() -> AsyncClient:
-    """Cliente async con service_role_key. Para operaciones PostgREST sin RLS."""
+    """Cliente async con service_role_key. Para operaciones PostgREST sin RLS.
+
+    Singleton: NO se cierra entre requests porque es compartido por todos los
+    background tasks. Su ciclo de vida es el del proceso.
+    """
     settings = get_settings()
     return AsyncClient(settings.supabase_url, settings.supabase_service_role_key)
 
@@ -59,8 +65,12 @@ def _extract_bearer_token(request: Request) -> str:
     return token
 
 
-def get_supabase_user(request: Request) -> AsyncClient:
-    """Cliente async per-request con anon_key + JWT del usuario.
+async def get_supabase_user(request: Request) -> AsyncGenerator[AsyncClient, None]:
+    """Async generator per-request con anon_key + JWT del usuario.
+
+    FastAPI inyecta el valor yielded (AsyncClient) en los endpoints.
+    El bloque ``finally`` garantiza que la sesión HTTP subyacente se
+    cierra al finalizar el request, evitando fugas de file descriptors.
 
     PostgREST recibirá el header ``Authorization`` con el token del
     usuario, por lo que las políticas RLS aplicarán automáticamente.
@@ -75,4 +85,7 @@ def get_supabase_user(request: Request) -> AsyncClient:
     token: str = _extract_bearer_token(request)
     client: AsyncClient = AsyncClient(settings.supabase_url, settings.supabase_anon_key)
     client.postgrest.auth(token)
-    return client
+    try:
+        yield client
+    finally:
+        await client.aclose()

@@ -1,4 +1,5 @@
 import json
+import threading
 
 import httpx
 import jwt
@@ -11,9 +12,14 @@ from app.config import get_settings
 _bearer_scheme = HTTPBearer()
 
 _jwks_cache: TTLCache[str, dict[str, object]] = TTLCache(maxsize=1, ttl=3600)
+# Lock necesario porque `get_current_user_id` es una función sync que FastAPI
+# ejecuta en el threadpool: múltiples threads pueden intentar poblar la caché
+# simultáneamente cuando expira. Sin lock se produce una carrera donde todos
+# hacen la petición HTTP a la vez (thundering herd).
+_jwks_lock = threading.Lock()
 
 
-@cached(cache=_jwks_cache)
+@cached(cache=_jwks_cache, lock=_jwks_lock)
 def _fetch_jwks() -> dict[str, object]:
     supabase_url: str = get_settings().supabase_url
     url = f"{supabase_url}/auth/v1/.well-known/jwks.json"

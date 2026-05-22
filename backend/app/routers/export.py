@@ -1,11 +1,12 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 from supabase import AsyncClient
 
 from app.dependencies.auth import get_current_user_id
+from app.dependencies.rate_limit import get_user_id_or_ip, limiter
 from app.dependencies.supabase import get_supabase_user
 
 router = APIRouter(prefix="/export", tags=["export"])
@@ -22,6 +23,9 @@ def _short_date(value: object) -> str:
     return raw[:10] if raw else ""
 
 
+_EXPORT_MESSAGES_LIMIT = 1000  # evitar OOM con usuarios con muchos mensajes
+
+
 async def _collect_user_data(user_id: str, supabase: AsyncClient) -> dict[str, object]:
     sessions_result = await (
         supabase.table("analysis_sessions")
@@ -36,6 +40,7 @@ async def _collect_user_data(user_id: str, supabase: AsyncClient) -> dict[str, o
 
     messages_by_session: dict[str, list[dict[str, object]]] = {sid: [] for sid in session_ids}
     tags_by_session: dict[str, list[dict[str, object]]] = {sid: [] for sid in session_ids}
+    messages_truncated: bool = False
 
     if session_ids:
         messages_result = await (
@@ -43,8 +48,11 @@ async def _collect_user_data(user_id: str, supabase: AsyncClient) -> dict[str, o
             .select("session_id, role, content, created_at")
             .in_("session_id", session_ids)
             .order("created_at", desc=False)
+            .limit(_EXPORT_MESSAGES_LIMIT)
             .execute()
         )
+        if len(messages_result.data) == _EXPORT_MESSAGES_LIMIT:
+            messages_truncated = True
         for row in messages_result.data:
             sid: str = str(row["session_id"])
             messages_by_session.setdefault(sid, []).append(row)
@@ -88,11 +96,12 @@ async def _collect_user_data(user_id: str, supabase: AsyncClient) -> dict[str, o
             }
         )
 
-    return {"sessions": sessions}
+    return {"sessions": sessions, "messages_truncated": messages_truncated}
 
 
 async def _collect_full_user_data(user_id: str, supabase: AsyncClient) -> dict[str, object]:
     base: dict[str, object] = await _collect_user_data(user_id, supabase)
+    messages_truncated: bool = bool(base.get("messages_truncated", False))
 
     profile_result = await (
         supabase.table("user_profile")
@@ -150,8 +159,9 @@ async def _collect_full_user_data(user_id: str, supabase: AsyncClient) -> dict[s
     ]
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "user_id": user_id,
+        "messages_truncated": messages_truncated,
         "profile": profile,
         "library": library,
         "memory": memory,
@@ -161,7 +171,7 @@ async def _collect_full_user_data(user_id: str, supabase: AsyncClient) -> dict[s
 
 def _render_markdown(user_id: str, data: dict[str, object]) -> str:
     lines: list[str] = []
-    today: str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today: str = datetime.now(UTC).strftime("%Y-%m-%d")
     lines.append("# Lumen — Historial de análisis")
     lines.append("")
     lines.append(f"_Generado el {today}_")
@@ -234,12 +244,14 @@ def _render_markdown(user_id: str, data: dict[str, object]) -> str:
 
 
 def _filename(extension: str) -> str:
-    today: str = datetime.now(timezone.utc).strftime("%Y%m%d")
+    today: str = datetime.now(UTC).strftime("%Y%m%d")
     return f"lumen-export-{today}.{extension}"
 
 
 @router.get("/markdown")
+@limiter.limit("10/hour", key_func=get_user_id_or_ip)
 async def export_markdown(
+    request: Request,
     user_id: str = Depends(get_current_user_id),
     supabase: AsyncClient = Depends(get_supabase_user),
 ) -> Response:
@@ -254,7 +266,9 @@ async def export_markdown(
 
 
 @router.get("/json")
+@limiter.limit("10/hour", key_func=get_user_id_or_ip)
 async def export_json(
+    request: Request,
     user_id: str = Depends(get_current_user_id),
     supabase: AsyncClient = Depends(get_supabase_user),
 ) -> Response:
