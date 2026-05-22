@@ -28,7 +28,7 @@ def _extract_names(items: object) -> list[str]:
     for item in items:
         if isinstance(item, dict) and "value" in item:
             out.append(str(item["value"]))
-        elif isinstance(item, (list, tuple)) and len(item) >= 1:
+        elif isinstance(item, list | tuple) and len(item) >= 1:
             out.append(str(item[0]))
     return out
 

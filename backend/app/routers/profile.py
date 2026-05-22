@@ -51,14 +51,14 @@ async def get_semantic_profile(
     temas: list[TopItem] = [
         TopItem(value=str(item[0]), count=int(item[1]))
         for item in raw_temas
-        if isinstance(item, (list, tuple)) and len(item) >= 2
+        if isinstance(item, list | tuple) and len(item) >= 2
     ]
 
     raw_directores: list[object] = list(row.get("directores_afines") or [])
     directores: list[TopItem] = [
         TopItem(value=str(item[0]), count=int(item[1]))
         for item in raw_directores
-        if isinstance(item, (list, tuple)) and len(item) >= 2
+        if isinstance(item, list | tuple) and len(item) >= 2
     ]
 
     return SemanticProfileResponse(
