@@ -1,13 +1,12 @@
 """Repositorio para la tabla `recommendations`."""
-from supabase import Client
+from supabase import AsyncClient
 
 from app.repositories.types import RecommendationRow
-from app.utils.async_supabase import run_sync
 
 
-async def list_active(client: Client, user_id: str) -> list[RecommendationRow]:
-    result = await run_sync(
-        lambda: client.table("recommendations")
+async def list_active(client: AsyncClient, user_id: str) -> list[RecommendationRow]:
+    result = await (
+        client.table("recommendations")
         .select("*")
         .eq("user_id", user_id)
         .eq("status", "active")
@@ -18,23 +17,21 @@ async def list_active(client: Client, user_id: str) -> list[RecommendationRow]:
 
 
 async def insert_recommendation(
-    client: Client, user_id: str, payload: dict[str, object]
+    client: AsyncClient, user_id: str, payload: dict[str, object]
 ) -> RecommendationRow | None:
-    """Inserta una recomendación. Devuelve la fila creada o None si la inserción no devolvió data."""
+    """Inserta una recomendación. Devuelve la fila creada o None si no devolvió data."""
     row: dict[str, object] = {"user_id": user_id, **payload}
-    result = await run_sync(
-        lambda: client.table("recommendations").insert(row).execute()
-    )
+    result = await client.table("recommendations").insert(row).execute()
     if not result.data:
         return None
     return result.data[0]
 
 
 async def get_by_id(
-    client: Client, user_id: str, recommendation_id: str
+    client: AsyncClient, user_id: str, recommendation_id: str
 ) -> RecommendationRow | None:
-    result = await run_sync(
-        lambda: client.table("recommendations")
+    result = await (
+        client.table("recommendations")
         .select("*")
         .eq("id", recommendation_id)
         .eq("user_id", user_id)
@@ -46,13 +43,13 @@ async def get_by_id(
 
 
 async def update_status(
-    client: Client,
+    client: AsyncClient,
     user_id: str,
     recommendation_id: str,
     status: str,
 ) -> RecommendationRow | None:
-    result = await run_sync(
-        lambda: client.table("recommendations")
+    result = await (
+        client.table("recommendations")
         .update({"status": status})
         .eq("id", recommendation_id)
         .eq("user_id", user_id)

@@ -33,6 +33,7 @@ export default function MovieCard({ movie, onClick }: MovieCardProps) {
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={1}
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

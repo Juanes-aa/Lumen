@@ -106,3 +106,36 @@ def test_validator_rejects_empty_cors() -> None:
     with pytest.raises(ConfigurationError) as exc:
         validate_critical_settings(settings)
     assert "CORS_ORIGINS" in str(exc.value)
+
+
+def test_validator_rejects_missing_supabase_url() -> None:
+    settings = _base_valid_settings(supabase_url="")
+    with pytest.raises(ConfigurationError) as exc:
+        validate_critical_settings(settings)
+    assert "SUPABASE_URL" in str(exc.value)
+
+
+def test_validator_rejects_missing_service_role_key() -> None:
+    settings = _base_valid_settings(supabase_service_role_key="")
+    with pytest.raises(ConfigurationError) as exc:
+        validate_critical_settings(settings)
+    assert "SUPABASE_SERVICE_ROLE_KEY" in str(exc.value)
+
+
+def test_validator_rejects_missing_groq_key() -> None:
+    settings = _base_valid_settings(groq_api_key="")
+    with pytest.raises(ConfigurationError) as exc:
+        validate_critical_settings(settings)
+    assert "GROQ_API_KEY" in str(exc.value)
+
+
+def test_validator_rejects_samesite_none_without_secure() -> None:
+    settings = _base_valid_settings(cookie_samesite="none", cookie_secure=False)
+    with pytest.raises(ConfigurationError) as exc:
+        validate_critical_settings(settings)
+    assert "COOKIE_SECURE" in str(exc.value)
+
+
+def test_validator_passes_samesite_none_with_secure() -> None:
+    settings = _base_valid_settings(cookie_samesite="none", cookie_secure=True)
+    validate_critical_settings(settings)  # debe pasar sin excepción

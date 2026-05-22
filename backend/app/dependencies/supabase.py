@@ -1,33 +1,45 @@
 """Clientes Supabase del backend.
 
-Dos modos de uso:
+Dos modos de acceso:
 
-* ``get_supabase_admin()`` — cliente singleton creado con
-  ``service_role_key``. Bypassea RLS. **Solo** para operaciones de
-  Auth Admin (register) y mantenimiento; nunca para queries de datos
-  de usuario en endpoints protegidos.
+* ``get_supabase_admin()`` — cliente **sync** con ``service_role_key``.
+  Bypassea RLS. Usado por el router de Auth (GoTrue sync API) y health check.
 
-* ``get_supabase_user(request)`` — dependency de FastAPI que crea un
-  cliente per-request con ``anon_key`` y propaga el JWT del usuario
-  (header ``Authorization: Bearer ...``) a PostgREST. Las políticas
-  RLS evalúan ``auth.uid()`` contra el ``sub`` del JWT, garantizando
-  aislamiento entre usuarios.
+* ``get_supabase_admin_data()`` — cliente **async** con ``service_role_key``.
+  Bypassea RLS. Usado para operaciones PostgREST en background tasks.
+
+* ``get_supabase_user(request)`` — cliente **async** per-request con ``anon_key``
+  + JWT del usuario propagado a PostgREST. Las políticas RLS evalúan
+  ``auth.uid()`` contra el ``sub`` del JWT, garantizando aislamiento entre usuarios.
 """
 
 from functools import lru_cache
 
 from fastapi import HTTPException, Request, status
-from supabase import Client, create_client
+from supabase import AsyncClient, Client, create_client
 
 from app.config import get_settings
 
 
+# ── Sync admin client (GoTrue auth — métodos sync de supabase_auth) ──────────
+
 @lru_cache(maxsize=1)
 def get_supabase_admin() -> Client:
-    """Cliente con service_role_key. Bypassea RLS. Uso restringido."""
+    """Cliente sync con service_role_key. Solo para Auth Admin y health check."""
     settings = get_settings()
     return create_client(settings.supabase_url, settings.supabase_service_role_key)
 
+
+# ── Async admin client (PostgREST data — background tasks) ───────────────────
+
+@lru_cache(maxsize=1)
+def get_supabase_admin_data() -> AsyncClient:
+    """Cliente async con service_role_key. Para operaciones PostgREST sin RLS."""
+    settings = get_settings()
+    return AsyncClient(settings.supabase_url, settings.supabase_service_role_key)
+
+
+# ── Async user client (PostgREST data — endpoints protegidos por RLS) ─────────
 
 def _extract_bearer_token(request: Request) -> str:
     auth_header: str | None = request.headers.get("authorization") or request.headers.get(
@@ -47,22 +59,20 @@ def _extract_bearer_token(request: Request) -> str:
     return token
 
 
-def get_supabase_user(request: Request) -> Client:
-    """Cliente per-request con anon_key + JWT del usuario.
+def get_supabase_user(request: Request) -> AsyncClient:
+    """Cliente async per-request con anon_key + JWT del usuario.
 
     PostgREST recibirá el header ``Authorization`` con el token del
     usuario, por lo que las políticas RLS aplicarán automáticamente.
     """
     settings = get_settings()
     if settings.supabase_anon_key == "":
-        # Fallo de configuración: sin anon key no podemos respetar RLS.
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Backend mal configurado: SUPABASE_ANON_KEY ausente",
         )
 
     token: str = _extract_bearer_token(request)
-    client: Client = create_client(settings.supabase_url, settings.supabase_anon_key)
-    # Propaga el JWT a todas las requests de PostgREST → activa RLS.
+    client: AsyncClient = AsyncClient(settings.supabase_url, settings.supabase_anon_key)
     client.postgrest.auth(token)
     return client

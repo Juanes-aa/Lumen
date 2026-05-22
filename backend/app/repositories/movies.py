@@ -1,32 +1,22 @@
-"""Repositorio para la tabla `movies_watched`.
-
-Funciones async: envuelven la llamada bloqueante de supabase-py con
-`run_sync` para no bloquear el event loop.
-"""
-from supabase import Client
+"""Repositorio para la tabla `movies_watched`."""
+from supabase import AsyncClient
 
 from app.repositories.types import MovieWatchedMini, MovieWatchedRow
-from app.utils.async_supabase import run_sync
 
 
 async def add_watched(
-    client: Client, user_id: str, payload: dict[str, object]
+    client: AsyncClient, user_id: str, payload: dict[str, object]
 ) -> MovieWatchedRow:
-    """Inserta una película vista. payload debe contener tmdb_id, title, etc.
-
-    Lanza la excepción original de Supabase si hay duplicado (manejar en el router).
-    """
+    """Inserta una película vista. Lanza la excepción de Supabase si hay duplicado."""
     row: dict[str, object] = {"user_id": user_id, **payload}
-    response = await run_sync(
-        lambda: client.table("movies_watched").insert(row).execute()
-    )
+    response = await client.table("movies_watched").insert(row).execute()
     return response.data[0]
 
 
-async def list_watched(client: Client, user_id: str) -> list[MovieWatchedRow]:
+async def list_watched(client: AsyncClient, user_id: str) -> list[MovieWatchedRow]:
     """Lista las películas vistas del usuario, ordenadas desc por created_at."""
-    response = await run_sync(
-        lambda: client.table("movies_watched")
+    response = await (
+        client.table("movies_watched")
         .select("*")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
@@ -35,10 +25,10 @@ async def list_watched(client: Client, user_id: str) -> list[MovieWatchedRow]:
     return response.data
 
 
-async def delete_watched(client: Client, user_id: str, movie_id: str) -> bool:
+async def delete_watched(client: AsyncClient, user_id: str, movie_id: str) -> bool:
     """Borra una película del usuario. True si se borró, False si no existía o era ajena."""
-    response = await run_sync(
-        lambda: client.table("movies_watched")
+    response = await (
+        client.table("movies_watched")
         .delete()
         .eq("id", movie_id)
         .eq("user_id", user_id)
@@ -48,11 +38,11 @@ async def delete_watched(client: Client, user_id: str, movie_id: str) -> bool:
 
 
 async def get_watched_by_id(
-    client: Client, user_id: str, movie_id: str
+    client: AsyncClient, user_id: str, movie_id: str
 ) -> MovieWatchedMini | None:
     """Obtiene una película del usuario por id, o None."""
-    result = await run_sync(
-        lambda: client.table("movies_watched")
+    result = await (
+        client.table("movies_watched")
         .select("id, title, tmdb_id, poster_url")
         .eq("id", movie_id)
         .eq("user_id", user_id)
@@ -63,10 +53,10 @@ async def get_watched_by_id(
     return result.data[0]
 
 
-async def mark_has_analysis(client: Client, user_id: str, movie_id: str) -> None:
+async def mark_has_analysis(client: AsyncClient, user_id: str, movie_id: str) -> None:
     """Marca una película como analizada. Solo afecta si pertenece al usuario."""
-    await run_sync(
-        lambda: client.table("movies_watched")
+    await (
+        client.table("movies_watched")
         .update({"has_analysis": True})
         .eq("id", movie_id)
         .eq("user_id", user_id)

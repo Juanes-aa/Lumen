@@ -27,8 +27,32 @@ export default function Layout(): React.ReactElement {
           background: '#1A1917',
         }}
       >
+        <a
+          href="#main-content"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: 'auto',
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.left = '0'
+            e.currentTarget.style.width = 'auto'
+            e.currentTarget.style.height = 'auto'
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.left = '-9999px'
+            e.currentTarget.style.width = '1px'
+            e.currentTarget.style.height = '1px'
+          }}
+        >
+          Saltar al contenido principal
+        </a>
         <MobileHeader />
         <main
+          id="main-content"
           style={{ flex: 1, minWidth: 0, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
         >
           <Outlet />
@@ -48,8 +72,32 @@ export default function Layout(): React.ReactElement {
         background: '#1A1917',
       }}
     >
+      <a
+        href="#main-content"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          top: 'auto',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.left = '0'
+          e.currentTarget.style.width = 'auto'
+          e.currentTarget.style.height = 'auto'
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.left = '-9999px'
+          e.currentTarget.style.width = '1px'
+          e.currentTarget.style.height = '1px'
+        }}
+      >
+        Saltar al contenido principal
+      </a>
       <Sidebar />
       <main
+        id="main-content"
         style={{ flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
         <Outlet />

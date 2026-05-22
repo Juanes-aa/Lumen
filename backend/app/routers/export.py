@@ -3,11 +3,10 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
-from supabase import Client
+from supabase import AsyncClient
 
 from app.dependencies.auth import get_current_user_id
 from app.dependencies.supabase import get_supabase_user
-from app.utils.async_supabase import run_sync
 
 router = APIRouter(prefix="/export", tags=["export"])
 
@@ -23,9 +22,9 @@ def _short_date(value: object) -> str:
     return raw[:10] if raw else ""
 
 
-async def _collect_user_data(user_id: str, supabase: Client) -> dict[str, object]:
-    sessions_result = await run_sync(
-        lambda: supabase.table("analysis_sessions")
+async def _collect_user_data(user_id: str, supabase: AsyncClient) -> dict[str, object]:
+    sessions_result = await (
+        supabase.table("analysis_sessions")
         .select("*, movies_watched(title, tmdb_id, poster_url, release_year)")
         .eq("user_id", user_id)
         .order("started_at", desc=True)
@@ -39,8 +38,8 @@ async def _collect_user_data(user_id: str, supabase: Client) -> dict[str, object
     tags_by_session: dict[str, list[dict[str, object]]] = {sid: [] for sid in session_ids}
 
     if session_ids:
-        messages_result = await run_sync(
-            lambda: supabase.table("analysis_messages")
+        messages_result = await (
+            supabase.table("analysis_messages")
             .select("session_id, role, content, created_at")
             .in_("session_id", session_ids)
             .order("created_at", desc=False)
@@ -50,8 +49,8 @@ async def _collect_user_data(user_id: str, supabase: Client) -> dict[str, object
             sid: str = str(row["session_id"])
             messages_by_session.setdefault(sid, []).append(row)
 
-        tags_result = await run_sync(
-            lambda: supabase.table("semantic_tags")
+        tags_result = await (
+            supabase.table("semantic_tags")
             .select("session_id, tag_type, tag_value")
             .in_("session_id", session_ids)
             .execute()
@@ -92,11 +91,11 @@ async def _collect_user_data(user_id: str, supabase: Client) -> dict[str, object
     return {"sessions": sessions}
 
 
-async def _collect_full_user_data(user_id: str, supabase: Client) -> dict[str, object]:
+async def _collect_full_user_data(user_id: str, supabase: AsyncClient) -> dict[str, object]:
     base: dict[str, object] = await _collect_user_data(user_id, supabase)
 
-    profile_result = await run_sync(
-        lambda: supabase.table("user_profile")
+    profile_result = await (
+        supabase.table("user_profile")
         .select("*")
         .eq("user_id", user_id)
         .execute()
@@ -119,8 +118,8 @@ async def _collect_full_user_data(user_id: str, supabase: Client) -> dict[str, o
             "instructions": profile_row.get("instructions") or "",
         }
 
-    memory_result = await run_sync(
-        lambda: supabase.table("user_memory")
+    memory_result = await (
+        supabase.table("user_memory")
         .select("content, created_at")
         .eq("user_id", user_id)
         .order("created_at", desc=False)
@@ -131,8 +130,8 @@ async def _collect_full_user_data(user_id: str, supabase: Client) -> dict[str, o
         for r in memory_result.data
     ]
 
-    library_result = await run_sync(
-        lambda: supabase.table("movies_watched")
+    library_result = await (
+        supabase.table("movies_watched")
         .select("tmdb_id, title, release_year, genre_ids, initial_note, created_at")
         .eq("user_id", user_id)
         .order("created_at", desc=True)
@@ -242,7 +241,7 @@ def _filename(extension: str) -> str:
 @router.get("/markdown")
 async def export_markdown(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> Response:
     data: dict[str, object] = await _collect_user_data(user_id, supabase)
     body: str = _render_markdown(user_id, data)
@@ -257,7 +256,7 @@ async def export_markdown(
 @router.get("/json")
 async def export_json(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> Response:
     payload: dict[str, object] = await _collect_full_user_data(user_id, supabase)
     body: str = json.dumps(payload, ensure_ascii=False, indent=2)

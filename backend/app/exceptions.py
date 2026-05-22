@@ -8,7 +8,7 @@ Política:
 
 NOTA CORS: app.add_exception_handler(Exception, ...) registra el handler en
 ServerErrorMiddleware, que está fuera de CORSMiddleware en la cadena ASGI.
-Su `send` bypassa send_with_cors, por lo que DEBEMOS añadir los headers CORS
+Su `send` bypassa CORSMiddleware, por lo que DEBEMOS añadir los headers CORS
 aquí directamente para que el navegador pueda leer la respuesta de error.
 """
 
@@ -39,8 +39,6 @@ async def unhandled_exception_handler(
         status_code=500,
         content={"detail": "Error interno", "request_id": request_id},
     )
-    # ServerErrorMiddleware's send bypasses CORSMiddleware.send_with_cors,
-    # so CORS headers must be added here for the browser to read this response.
     origin: str = request.headers.get("origin", "")
     if origin and origin in get_settings().get_cors_origins():
         response.headers["access-control-allow-origin"] = origin

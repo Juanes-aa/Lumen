@@ -1,12 +1,10 @@
-"""Helper para ejecutar IO bloqueante (supabase-py sync) en un thread
-sin bloquear el event loop.
+"""Helper legado para ejecutar IO bloqueante de supabase-py sync.
 
-Uso:
-    rows = await run_sync(lambda: client.table("...").select("*").execute())
+DEPRECADO: los repositorios de datos usan AsyncClient directamente
+(supabase-py 2.x tiene AsyncClient estable). Este módulo se mantiene
+únicamente para el router de Auth (GoTrue sync API).
 
-Justificación: supabase-py todavía es sync y su variante async es
-inestable. asyncio.to_thread libera el event loop durante la llamada,
-lo que importa especialmente para SSE/streaming.
+No usar en código nuevo — usar ``await client.table(...).execute()`` directamente.
 """
 from __future__ import annotations
 

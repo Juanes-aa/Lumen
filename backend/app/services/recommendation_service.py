@@ -4,11 +4,10 @@ import logging
 from typing import Any
 
 import httpx
-from groq import AsyncGroq
-from supabase import Client
+from supabase import AsyncClient
 
 from app.config import get_settings
-from app.utils.async_supabase import run_sync
+from app.providers.llm import LLMProvider
 from app.utils.rows import get_list_str
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -129,23 +128,23 @@ async def _search_tmdb(title: str, year: str) -> dict[str, Any] | None:
 async def generate_recommendations(
     user_id: str,
     n: int,
-    supabase: Client,
-    groq_client: AsyncGroq,
+    supabase: AsyncClient,
+    provider: LLMProvider,
 ) -> list[dict[str, Any]]:
-    profile_result = await run_sync(
-        lambda: supabase.table("user_profile").select("*").eq("user_id", user_id).execute()
+    profile_result = await (
+        supabase.table("user_profile").select("*").eq("user_id", user_id).execute()
     )
     profile: dict[str, Any] = profile_result.data[0] if profile_result.data else {}
 
-    watched_result = await run_sync(
-        lambda: supabase.table("movies_watched").select("title").eq("user_id", user_id).execute()
+    watched_result = await (
+        supabase.table("movies_watched").select("title").eq("user_id", user_id).execute()
     )
     watched_titles: list[str] = [
         str(row["title"]) for row in watched_result.data if row.get("title")
     ]
 
-    prev_rec_result = await run_sync(
-        lambda: supabase.table("recommendations")
+    prev_rec_result = await (
+        supabase.table("recommendations")
         .select("title")
         .eq("user_id", user_id)
         .execute()
@@ -161,27 +160,24 @@ async def generate_recommendations(
         n=n,
     )
 
-    async def _call_groq(p: str) -> list[dict[str, Any]]:
-        response = await groq_client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": p}],
+    async def _call_llm(p: str) -> list[dict[str, Any]]:
+        raw: str = await provider.complete(
+            [{"role": "user", "content": p}],
             max_tokens=1500,
-            stream=False,
         )
-        raw: str = response.choices[0].message.content
         parsed: dict[str, Any] = json.loads(raw)
         return list(parsed["recommendations"])
 
     llm_items: list[dict[str, Any]] = []
     try:
-        llm_items = await _call_groq(prompt)
+        llm_items = await _call_llm(prompt)
     except Exception:
         logger.warning("recommendation_json_retry user_id=%s", user_id)
         retry_prompt: str = (
             prompt + "\n\nIMPORTANT: respond with ONLY raw JSON, no text before or after."
         )
         try:
-            llm_items = await _call_groq(retry_prompt)
+            llm_items = await _call_llm(retry_prompt)
         except Exception:
             logger.exception(
                 "generate_recommendations_failed user_id=%s", user_id

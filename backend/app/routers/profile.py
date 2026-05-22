@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from supabase import Client
+from supabase import AsyncClient
 
 from app.dependencies.auth import get_current_user_id
 from app.dependencies.supabase import get_supabase_user
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 @router.get("/semantic", response_model=SemanticProfileResponse)
 async def get_semantic_profile(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> SemanticProfileResponse:
     row = await profile_repo.get_profile(supabase, user_id)
 
@@ -68,7 +68,7 @@ async def get_semantic_profile(
 @router.get("/preferences", response_model=PreferencesResponse)
 async def get_preferences(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> PreferencesResponse:
     row = await profile_repo.get_preferences_row(supabase, user_id)
     if row is None:
@@ -90,7 +90,7 @@ async def get_preferences(
 async def update_preferences(
     data: PreferencesRequest,
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> PreferencesResponse:
     await profile_repo.upsert_preferences(
         supabase,
@@ -108,7 +108,7 @@ async def update_preferences(
 @router.get("/instructions", response_model=InstructionsResponse)
 async def get_instructions(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> InstructionsResponse:
     row = await profile_repo.get_instructions_row(supabase, user_id)
     if row is None:
@@ -121,7 +121,7 @@ async def get_instructions(
 async def update_instructions(
     data: InstructionsRequest,
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> InstructionsResponse:
     await profile_repo.upsert_instructions(supabase, user_id, data.instructions)
     return InstructionsResponse(user_id=user_id, instructions=data.instructions)
@@ -130,7 +130,7 @@ async def update_instructions(
 @router.get("/memory", response_model=MemoryListResponse)
 async def get_memory_notes(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> MemoryListResponse:
     rows = await memory_repo.list_user_memory(supabase, user_id)
     notes: list[MemoryNoteResponse] = [
@@ -149,7 +149,7 @@ async def get_memory_notes(
 async def add_memory_note(
     data: MemoryNoteCreate,
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> MemoryNoteResponse:
     if await memory_repo.count_user_memory(supabase, user_id) >= 10:
         raise HTTPException(
@@ -169,7 +169,7 @@ async def add_memory_note(
 async def delete_memory_note(
     note_id: str,
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> dict[str, str]:
     deleted: bool = await memory_repo.delete_memory_note(supabase, user_id, note_id)
     if not deleted:

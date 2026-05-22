@@ -13,6 +13,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         viewBox="0 0 24 24"
         stroke="currentColor"
         strokeWidth={2}
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"
@@ -26,6 +27,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         value={value}
         onChange={(e) => { onChange(e.target.value); }}
         placeholder="Buscar películas..."
+        aria-label="Buscar películas"
         className="w-full rounded-xl border border-gray-700 bg-gray-800 py-3 pl-10 pr-10 text-white placeholder-gray-500 transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
       />
 

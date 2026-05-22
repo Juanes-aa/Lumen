@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from postgrest.exceptions import APIError as PostgrestAPIError
-from supabase import Client
+from supabase import AsyncClient
 
 from app.dependencies.auth import get_current_user_id
 from app.dependencies.supabase import get_supabase_user
@@ -40,7 +40,7 @@ def _is_unique_violation(exc: BaseException) -> bool:
 async def add_watched_movie(
     data: WatchedMovieCreate,
     user_id: str = Depends(get_current_user_id),
-    client: Client = Depends(get_supabase_user),
+    client: AsyncClient = Depends(get_supabase_user),
 ) -> WatchedMovieResponse:
     payload: dict[str, object] = {
         "tmdb_id": data.tmdb_id,
@@ -72,7 +72,7 @@ async def add_watched_movie(
 @router.get("/watched", response_model=list[WatchedMovieResponse])
 async def get_watched_movies(
     user_id: str = Depends(get_current_user_id),
-    client: Client = Depends(get_supabase_user),
+    client: AsyncClient = Depends(get_supabase_user),
 ) -> list[WatchedMovieResponse]:
     rows = await movies_repo.list_watched(client, user_id)
     return [WatchedMovieResponse.model_validate(row) for row in rows]
@@ -82,7 +82,7 @@ async def get_watched_movies(
 async def delete_watched_movie(
     movie_id: str,
     user_id: str = Depends(get_current_user_id),
-    client: Client = Depends(get_supabase_user),
+    client: AsyncClient = Depends(get_supabase_user),
 ) -> None:
     deleted: bool = await movies_repo.delete_watched(client, user_id, movie_id)
     if not deleted:

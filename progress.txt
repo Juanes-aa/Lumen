@@ -1,5 +1,5 @@
-CineThink — Notas de hardening (mayo 2026)
-============================================
+Lumen — Notas de hardening (mayo 2026)
+=======================================
 
 Fases completadas:
   1. Validación de input (Pydantic)

@@ -1,13 +1,13 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from groq import AsyncGroq
-from supabase import Client
+from supabase import AsyncClient
 
 from app.dependencies.auth import get_current_user_id
-from app.dependencies.groq_client import get_groq_client
-from app.dependencies.rate_limit import limiter
+from app.dependencies.rate_limit import get_user_id_or_ip, limiter
 from app.dependencies.supabase import get_supabase_user
+from app.providers import get_llm_provider
+from app.providers.llm import LLMProvider
 from app.repositories import recommendations as recs_repo
 from app.repositories import sessions as sessions_repo
 from app.repositories.types import RecommendationRow
@@ -46,7 +46,7 @@ def _row_to_out(row: RecommendationRow) -> RecommendationOut:
 @router.get("/", response_model=RecommendationsListResponse)
 async def get_recommendations(
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> RecommendationsListResponse:
     rows = await recs_repo.list_active(supabase, user_id)
     return RecommendationsListResponse(
@@ -59,12 +59,12 @@ async def get_recommendations(
     response_model=GenerateRecommendationsResponse,
     status_code=201,
 )
-@limiter.limit("5/hour")
+@limiter.limit("5/hour", key_func=get_user_id_or_ip)
 async def generate_new_recommendations(
     request: Request,
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
-    groq_client: AsyncGroq = Depends(get_groq_client),
+    supabase: AsyncClient = Depends(get_supabase_user),
+    provider: LLMProvider = Depends(get_llm_provider),
 ) -> GenerateRecommendationsResponse:
     closed_ids = await sessions_repo.list_closed_session_ids(supabase, user_id)
     if len(closed_ids) < 3:
@@ -77,7 +77,7 @@ async def generate_new_recommendations(
         user_id=user_id,
         n=5,
         supabase=supabase,
-        groq_client=groq_client,
+        provider=provider,
     )
 
     saved: list[RecommendationOut] = []
@@ -110,7 +110,7 @@ async def generate_new_recommendations(
 async def dismiss_recommendation(
     recommendation_id: str,
     user_id: str = Depends(get_current_user_id),
-    supabase: Client = Depends(get_supabase_user),
+    supabase: AsyncClient = Depends(get_supabase_user),
 ) -> RecommendationOut:
     if await recs_repo.get_by_id(supabase, user_id, recommendation_id) is None:
         raise HTTPException(

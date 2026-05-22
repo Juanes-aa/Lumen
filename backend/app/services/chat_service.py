@@ -7,7 +7,7 @@ e inserta el mensaje del usuario. Devuelve la lista de mensajes lista para
 pasar a Groq.
 """
 from fastapi import HTTPException, status
-from supabase import Client
+from supabase import AsyncClient
 
 from app.repositories import memory as memory_repo
 from app.repositories import messages as messages_repo
@@ -25,7 +25,7 @@ from app.utils.rows import get_list_str
 
 
 async def build_chat_payload(
-    client: Client,
+    client: AsyncClient,
     session_id: str,
     user_id: str,
     user_content: str,
@@ -126,7 +126,7 @@ async def build_chat_payload(
 
 
 async def persist_assistant_message(
-    client: Client, session_id: str, content: str
+    client: AsyncClient, session_id: str, content: str
 ) -> AnalysisMessageRow:
     """Inserta el mensaje del assistant y devuelve la fila creada."""
     return await messages_repo.insert_message(client, session_id, "assistant", content)
