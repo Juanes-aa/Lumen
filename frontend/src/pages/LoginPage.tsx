@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loginUser } from '../api/auth'
 import { useAuthStore } from '../stores/authStore'
+import { ApiError } from '../api/client'
 import LumenSymbol from '../components/LumenSymbol'
 
 export default function LoginPage(): React.ReactElement {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
+  const [emailNotVerified, setEmailNotVerified] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -22,6 +24,7 @@ export default function LoginPage(): React.ReactElement {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     setError(null)
+    setEmailNotVerified(false)
     const validationError: string | null = validate()
     if (validationError !== null) {
       setError(validationError)
@@ -40,7 +43,16 @@ export default function LoginPage(): React.ReactElement {
       )
       navigate('/')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Algo falló. El intento no se perdió — prueba de nuevo.')
+      // Supabase devuelve "Email not confirmed" cuando el usuario no ha verificado
+      const detail = err instanceof ApiError ? err.detail : ''
+      const isUnverified =
+        detail.toLowerCase().includes('email not confirmed') ||
+        detail.toLowerCase().includes('email_not_confirmed')
+      if (isUnverified) {
+        setEmailNotVerified(true)
+      } else {
+        setError(err instanceof Error ? err.message : 'Algo falló. El intento no se perdió — prueba de nuevo.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -102,6 +114,16 @@ export default function LoginPage(): React.ReactElement {
             />
           </div>
 
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="font-sans text-[12px] no-underline hover:opacity-75 transition-opacity duration-150"
+              style={{ color: 'rgba(250, 249, 246, 0.45)' }}
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
+
           {error !== null ? (
             <p
               role="alert"
@@ -109,6 +131,22 @@ export default function LoginPage(): React.ReactElement {
             >
               {error}
             </p>
+          ) : null}
+
+          {emailNotVerified ? (
+            <div
+              role="alert"
+              className="font-sans text-[12.5px] bg-[rgba(212,163,72,0.08)] border-[0.4px] border-[rgba(212,163,72,0.3)] rounded-md px-3 py-2.5 leading-[1.6]"
+              style={{ color: 'rgba(250, 249, 246, 0.75)' }}
+            >
+              Debes verificar tu email antes de iniciar sesión.{' '}
+              <Link
+                to={`/verify-email?email=${encodeURIComponent(email)}`}
+                className="text-amber no-underline hover:opacity-75 transition-opacity duration-150"
+              >
+                Reenviar verificación →
+              </Link>
+            </div>
           ) : null}
 
           <button

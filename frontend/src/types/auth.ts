@@ -26,3 +26,8 @@ export interface RefreshResponse {
   email: string;
   username: string;
 }
+
+export interface RegisterPendingResponse {
+  status: "verification_pending";
+  email: string;
+}

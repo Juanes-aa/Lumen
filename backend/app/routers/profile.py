@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from supabase import AsyncClient
+from supabase_auth.errors import AuthApiError
 
 from app.dependencies.auth import get_current_user_id
-from app.dependencies.supabase import get_supabase_user
+from app.dependencies.supabase import get_supabase_admin, get_supabase_user
 from app.repositories import memory as memory_repo
 from app.repositories import profile as profile_repo
+from app.utils.async_supabase import run_sync
 from app.utils.rows import get_int, get_list_str, get_str
 from app.schemas.profile import (
+    DeleteAccountRequest,
     InstructionsRequest,
     InstructionsResponse,
     MemoryListResponse,
@@ -17,6 +22,8 @@ from app.schemas.profile import (
     SemanticProfileResponse,
     TopItem,
 )
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -178,3 +185,74 @@ async def delete_memory_note(
             detail="Nota no encontrada",
         )
     return {"message": "Note deleted successfully"}
+
+
+@router.delete("/account", status_code=200)
+async def delete_account(
+    request: Request,
+    response: Response,
+    data: DeleteAccountRequest,
+    user_id: str = Depends(get_current_user_id),
+) -> dict[str, str]:
+    """Borra la cuenta del usuario de forma permanente (GDPR).
+
+    Flujo:
+    1. Obtiene el email del usuario vía Admin API.
+    2. Verifica la contraseña con sign_in_with_password.
+    3. Elimina al usuario con Admin API — ON DELETE CASCADE borra todos sus datos.
+    4. Limpia la cookie de refresh_token.
+    """
+    from app.routers.auth import REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH
+
+    admin = get_supabase_admin()
+
+    # 1. Obtener email del usuario
+    try:
+        user_data = await run_sync(lambda: admin.auth.admin.get_user_by_id(user_id))
+    except Exception as exc:
+        logger.exception("delete_account_get_user_failed user_id=%s", user_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al verificar la cuenta",
+        ) from exc
+
+    if user_data.user is None or not user_data.user.email:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado",
+        )
+    email: str = str(user_data.user.email)
+
+    # 2. Verificar contraseña
+    try:
+        await run_sync(
+            lambda: admin.auth.sign_in_with_password(
+                {"email": email, "password": data.password}
+            )
+        )
+    except AuthApiError as exc:
+        logger.warning(
+            "delete_account_wrong_password user_id=%s status=%s",
+            user_id,
+            getattr(exc, "status", None),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Contraseña incorrecta",
+        ) from exc
+
+    # 3. Eliminar usuario (ON DELETE CASCADE elimina todos sus datos)
+    try:
+        await run_sync(lambda: admin.auth.admin.delete_user(user_id))
+        logger.info("delete_account_success user_id=%s", user_id)
+    except Exception as exc:
+        logger.exception("delete_account_delete_failed user_id=%s", user_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo eliminar la cuenta",
+        ) from exc
+
+    # 4. Limpiar cookie de refresh_token
+    response.delete_cookie(key=REFRESH_COOKIE_NAME, path=REFRESH_COOKIE_PATH)
+
+    return {"message": "Cuenta eliminada correctamente"}

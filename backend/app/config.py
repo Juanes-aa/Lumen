@@ -40,9 +40,15 @@ class Settings(BaseSettings):
     cookie_samesite: str = "lax"
     refresh_cookie_max_age_seconds: int = 60 * 60 * 24 * 30  # 30 días
 
+    # URL pública del frontend (Vercel en prod, localhost en dev).
+    # Usada como redirect_to en los emails de recuperación de contraseña.
+    frontend_url: str = "http://localhost:5173"
+
     # Rate limiting: si se configura REDIS_URL, slowapi usa Redis en lugar
     # de memoria del proceso (necesario para despliegues con >1 worker).
     redis_url: str | None = None
+    # Permite deshabilitar el rate limiter en entornos de test (RATE_LIMIT_ENABLED=false).
+    rate_limit_enabled: bool = True
 
     # Límites diarios de mensajes LLM por tier (0 = ilimitado).
     free_daily_message_limit: int = 50

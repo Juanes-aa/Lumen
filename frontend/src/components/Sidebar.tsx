@@ -96,6 +96,20 @@ export default function Sidebar(): React.ReactElement {
         >
           Cerrar sesión
         </button>
+        <div style={{ display: 'flex', gap: 12, padding: '6px 18px 2px' }}>
+          <Link
+            to="/privacy"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(136,135,128,0.6)', textDecoration: 'none', letterSpacing: '0.03em' }}
+          >
+            Privacidad
+          </Link>
+          <Link
+            to="/terms"
+            style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10, color: 'rgba(136,135,128,0.6)', textDecoration: 'none', letterSpacing: '0.03em' }}
+          >
+            Términos
+          </Link>
+        </div>
       </div>
     </aside>
   )

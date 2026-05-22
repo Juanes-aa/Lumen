@@ -10,6 +10,7 @@ import InstructionsSection from './profile/InstructionsSection'
 import MemorySection from './profile/MemorySection'
 import PreferencesSection from './profile/PreferencesSection'
 import ExportSection from './profile/ExportSection'
+import DangerZoneSection from './profile/DangerZoneSection'
 import { useIsMobile } from '../hooks/useIsMobile'
 
 interface StatsRowProps {
@@ -128,6 +129,7 @@ export default function ProfilePage(): React.ReactElement {
           topicsCount={topicsCount}
         />
         <ExportSection />
+        <DangerZoneSection />
         {toast !== null ? (
           <div className="lumen-toast" role="status" aria-live="polite">{toast}</div>
         ) : null}
@@ -171,6 +173,7 @@ export default function ProfilePage(): React.ReactElement {
             topicsCount={topicsCount}
           />
           <ExportSection />
+          <DangerZoneSection />
         </aside>
       </div>
 

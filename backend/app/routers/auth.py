@@ -1,20 +1,25 @@
 import logging
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Request, Response
-from supabase import Client
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from supabase import Client, create_client
 from supabase_auth.errors import AuthApiError
 
 from app.config import get_settings
+from app.dependencies.auth import get_current_user_id
 from app.dependencies.rate_limit import limiter
 from app.dependencies.supabase import get_supabase_admin
 from app.utils.async_supabase import run_sync
 from app.schemas.auth import (
+    ForgotPasswordRequest,
     LoginRequest,
     LoginResponse,
     RefreshResponse,
+    RegisterPendingResponse,
     RegisterRequest,
     RegisterResponse,
+    ResendVerificationRequest,
+    ResetPasswordRequest,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -77,11 +82,16 @@ def _is_duplicate_user_error(exc: AuthApiError) -> bool:
     return fallback_match
 
 
-@router.post("/register", response_model=RegisterResponse, status_code=201)
+@router.post("/register", response_model=RegisterPendingResponse, status_code=201)
 @limiter.limit("10/minute")
 async def register(
     request: Request, response: Response, data: RegisterRequest
-) -> RegisterResponse:
+) -> RegisterPendingResponse:
+    """Registra el usuario y envía un email de verificación.
+
+    Devuelve `status=verification_pending` — el usuario debe verificar su email
+    antes de poder iniciar sesión. No se crea sesión en este punto.
+    """
     client: Client = get_supabase_admin()
 
     try:
@@ -90,7 +100,9 @@ async def register(
                 {
                     "email": data.email,
                     "password": data.password,
-                    "email_confirm": True,
+                    # False → Supabase envía email de verificación.
+                    # El usuario no puede iniciar sesión hasta confirmar.
+                    "email_confirm": False,
                 }
             )
         )
@@ -131,36 +143,7 @@ async def register(
             detail="No se pudo guardar el perfil de usuario",
         ) from exc
 
-    try:
-        sign_in_response = await run_sync(
-            lambda: client.auth.sign_in_with_password(
-                {"email": data.email, "password": data.password}
-            )
-        )
-    except AuthApiError as exc:
-        logger.exception(
-            "auth_register_signin_failed user_id=%s status=%s code=%s",
-            user_id,
-            getattr(exc, "status", None),
-            getattr(exc, "code", None),
-        )
-        raise HTTPException(
-            status_code=500,
-            detail="No se pudo iniciar sesión tras el registro",
-        ) from exc
-
-    session = sign_in_response.session
-    if session is None:
-        raise HTTPException(status_code=500, detail="No se pudo crear la sesión")
-
-    _set_refresh_cookie(response, session.refresh_token)
-
-    return RegisterResponse(
-        user_id=user_id,
-        email=data.email,
-        username=data.username,
-        access_token=session.access_token,
-    )
+    return RegisterPendingResponse(status="verification_pending", email=data.email)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -282,8 +265,96 @@ async def refresh(request: Request, response: Response) -> RefreshResponse:
     )
 
 
+@router.post("/resend-verification", status_code=200)
+@limiter.limit("3/minute")
+async def resend_verification(
+    request: Request, data: ResendVerificationRequest
+) -> dict[str, str]:
+    """Reenvía el email de verificación de registro. Siempre responde 200."""
+    client: Client = get_supabase_admin()
+    try:
+        # gotrue-py usa `resend({"type": "signup", "email": ...})`.
+        await run_sync(
+            lambda: client.auth.resend({"type": "signup", "email": data.email})
+        )
+    except Exception:
+        logger.debug("auth_resend_verification_failed email=%s — best effort", data.email)
+    return {
+        "message": "Si el email está registrado y pendiente de verificación, recibirás el enlace"
+    }
+
+
+@router.post("/forgot-password", status_code=200)
+@limiter.limit("5/minute")
+async def forgot_password(
+    request: Request, data: ForgotPasswordRequest
+) -> dict[str, str]:
+    """Envía un email de recuperación. Siempre responde 200 para no revelar
+    si el email existe en el sistema (evita enumeración de usuarios)."""
+    client: Client = get_supabase_admin()
+    settings = get_settings()
+    try:
+        redirect_to: str = f"{settings.frontend_url}/reset-password"
+        await run_sync(
+            lambda: client.auth.reset_password_for_email(
+                data.email, options={"redirect_to": redirect_to}
+            )
+        )
+    except Exception:
+        logger.debug("auth_forgot_password_failed email=%s — best effort", data.email)
+    return {"message": "Si el email está registrado, recibirás un enlace de recuperación"}
+
+
+@router.post("/reset-password", status_code=200)
+async def reset_password(
+    data: ResetPasswordRequest,
+    user_id: str = Depends(get_current_user_id),
+) -> dict[str, str]:
+    """Actualiza la contraseña usando el access_token del magic link de recuperación.
+    El cliente debe enviar el token como Bearer en el header Authorization."""
+    client: Client = get_supabase_admin()
+    try:
+        await run_sync(
+            lambda: client.auth.admin.update_user_by_id(
+                user_id, {"password": data.new_password}
+            )
+        )
+    except AuthApiError as exc:
+        logger.warning(
+            "auth_reset_password_failed user_id=%s status=%s code=%s",
+            user_id,
+            getattr(exc, "status", None),
+            getattr(exc, "code", None),
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="No se pudo actualizar la contraseña",
+        ) from exc
+    return {"message": "Contraseña actualizada correctamente"}
+
+
 @router.post("/logout", status_code=204)
-async def logout(response: Response) -> Response:
+async def logout(request: Request, response: Response) -> Response:
+    refresh_token_val: str | None = request.cookies.get(REFRESH_COOKIE_NAME)
+    if refresh_token_val:
+        # Best-effort: revocar la sesión en Supabase para invalidar el
+        # refresh_token activo. Cliente temporal para no contaminar el singleton
+        # admin con estado de sesión de otro usuario.
+        # El access_token sigue válido hasta su expiración (~1h), pero sin
+        # refresh_token el usuario no puede renovarlo.
+        try:
+            settings = get_settings()
+            temp_client: Client = await run_sync(
+                lambda: create_client(settings.supabase_url, settings.supabase_anon_key)
+            )
+            session_resp = await run_sync(
+                lambda: temp_client.auth.refresh_session(refresh_token_val)
+            )
+            if session_resp and session_resp.session:
+                await run_sync(lambda: temp_client.auth.sign_out())
+        except Exception:
+            logger.debug("auth_logout_revoke_failed — best effort, continuing logout")
+
     _clear_refresh_cookie(response)
     response.status_code = 204
     return response

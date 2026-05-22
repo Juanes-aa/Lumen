@@ -7,6 +7,11 @@ import { useInitAuth } from "./hooks/useInitAuth";
 
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const MovieDetailPage = lazy(() => import("./pages/MovieDetailPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
@@ -44,6 +49,11 @@ function AppRoutes() {
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route path="/planes" element={<PlansPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

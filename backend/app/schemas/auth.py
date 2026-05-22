@@ -39,3 +39,21 @@ class RefreshResponse(BaseModel):
     user_id: str
     email: str
     username: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class RegisterPendingResponse(BaseModel):
+    """Respuesta cuando el registro requiere verificación de email."""
+    status: str = "verification_pending"
+    email: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr

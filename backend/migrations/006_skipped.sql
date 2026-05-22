@@ -1,0 +1,7 @@
+-- 006_skipped.sql
+--
+-- Esta migración fue omitida intencionalmente durante el desarrollo.
+-- La numeración salta de 005 a 007 porque la migración 006 fue redactada
+-- localmente pero descartada antes de aplicarse a ningún entorno.
+-- Se mantiene este archivo vacío para que la secuencia numérica sea explícita
+-- y no genere confusión al revisar el historial de migraciones.

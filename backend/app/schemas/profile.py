@@ -57,3 +57,7 @@ class MemoryNoteResponse(BaseModel):
 
 class MemoryListResponse(BaseModel):
     notes: list[MemoryNoteResponse]
+
+
+class DeleteAccountRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=128)

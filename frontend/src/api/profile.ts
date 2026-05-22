@@ -55,3 +55,11 @@ export async function addMemoryNote(content: string, token: string): Promise<Mem
 export async function deleteMemoryNote(noteId: string, token: string): Promise<void> {
   await apiFetch<void>(`/profile/memory/${noteId}`, { method: 'DELETE' }, { token })
 }
+
+export async function deleteAccount(password: string, token: string): Promise<void> {
+  await apiFetch<{ message: string }>(
+    '/profile/account',
+    { method: 'DELETE', body: { password } },
+    { token },
+  )
+}

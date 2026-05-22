@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerUser } from '../api/auth'
-import { useAuthStore } from '../stores/authStore'
 import LumenSymbol from '../components/LumenSymbol'
 
 export default function RegisterPage(): React.ReactElement {
@@ -11,7 +10,6 @@ export default function RegisterPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  const setAuth = useAuthStore((s) => s.setAuth)
   const navigate = useNavigate()
 
   function validate(): string | null {
@@ -33,15 +31,9 @@ export default function RegisterPage(): React.ReactElement {
     setIsLoading(true)
     try {
       const response = await registerUser({ email, username, password })
-      setAuth(
-        {
-          user_id: response.user_id,
-          email: response.email,
-          username: response.username,
-        },
-        response.access_token,
-      )
-      navigate('/')
+      if (response.status === 'verification_pending') {
+        void navigate(`/verify-email?email=${encodeURIComponent(response.email)}`)
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Algo falló. El intento no se perdió — prueba de nuevo.')
     } finally {
@@ -128,6 +120,17 @@ export default function RegisterPage(): React.ReactElement {
               {error}
             </p>
           ) : null}
+
+          <p className="font-sans text-center" style={{ fontSize: 11.5, color: 'rgba(250,249,246,0.35)', lineHeight: 1.6 }}>
+            Al registrarte aceptas los{' '}
+            <Link to="/terms" className="text-amber no-underline hover:opacity-75 transition-opacity duration-150">
+              Términos de servicio
+            </Link>
+            {' '}y la{' '}
+            <Link to="/privacy" className="text-amber no-underline hover:opacity-75 transition-opacity duration-150">
+              Política de privacidad
+            </Link>
+          </p>
 
           <button
             type="submit"
