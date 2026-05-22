@@ -24,6 +24,7 @@ export default function InstructionsSection({ onToast }: InstructionsSectionProp
   useEffect(() => {
     if (!initializedRef.current && !instructionsQuery.isPending) {
       const fromServer: string | undefined = instructionsQuery.data?.instructions
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInstructions(
         fromServer !== undefined && fromServer !== '' ? fromServer : DEFAULT_INSTRUCTIONS,
       )

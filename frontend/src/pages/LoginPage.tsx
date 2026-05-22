@@ -65,9 +65,9 @@ export default function LoginPage(): React.ReactElement {
         {/* ── Marca ── */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <LumenSymbol size={30} />
-          <span className="font-serif text-[32px] font-medium text-celuloide tracking-[-0.02em] leading-none">
+          <h1 className="font-serif text-[32px] font-medium text-celuloide tracking-[-0.02em] leading-none">
             Lumen
-          </span>
+          </h1>
         </div>
 
         {/* ── Tagline ── */}

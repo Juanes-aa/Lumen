@@ -6,6 +6,7 @@ line-length = 100
 select = ["E", "W", "F", "I", "B", "UP"]
 ignore = [
     "B008",  # function call in default argument (FastAPI Depends pattern)
+    "E501",  # line too long — los mocks en tests tienen cadenas largas inevitables
 ]
 
 [tool.ruff.lint.isort]

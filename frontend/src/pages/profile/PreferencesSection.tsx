@@ -57,7 +57,9 @@ export default function PreferencesSection({ onToast }: PreferencesSectionProps)
 
   useEffect(() => {
     if (!initializedRef.current && prefsQuery.data !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFavoriteGenres(prefsQuery.data.favorite_genres)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDirectorsInput(prefsQuery.data.reference_directors.join(', '))
       initializedRef.current = true
     }
