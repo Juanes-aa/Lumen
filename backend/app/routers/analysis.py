@@ -205,7 +205,7 @@ async def send_message(
     assistant_row: AnalysisMessageRow = await chat_service.persist_assistant_message(
         client, session_id, assistant_content
     )
-    await usage_repo.increment_daily_count(client, user_id)
+    await usage_repo.increment_daily_count(client, user_id, daily_limit)
 
     return MessageResponse(
         id=assistant_row["id"],
@@ -259,7 +259,7 @@ async def send_message_stream(
                 row: AnalysisMessageRow = await chat_service.persist_assistant_message(
                     client, session_id, full_response
                 )
-                await usage_repo.increment_daily_count(client, user_id)
+                await usage_repo.increment_daily_count(client, user_id, daily_limit)
                 yield (
                     f"id: {event_id}\ndata: "
                     + json.dumps({"done": True, "message_id": str(row["id"])})
