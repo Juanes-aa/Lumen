@@ -1,6 +1,6 @@
 import json
 from collections.abc import Generator
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -21,6 +21,12 @@ def _auth_headers() -> dict[str, str]:
     return {"Authorization": "Bearer fake-valid-token"}
 
 
+def _ae(data: list | None = None) -> AsyncMock:
+    r: MagicMock = MagicMock()
+    r.data = data if data is not None else []
+    return AsyncMock(return_value=r)
+
+
 @pytest.fixture(autouse=True)
 def _overrides() -> Generator[None, None, None]:
     app.dependency_overrides[get_current_user_id] = _override_auth
@@ -35,7 +41,8 @@ def _mock_supabase_with_one_session() -> MagicMock:
     def table_side_effect(name: str) -> MagicMock:
         t: MagicMock = MagicMock()
         if name == "analysis_sessions":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
+            # _collect_user_data: .select(...).eq("user_id").order(...).execute()
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([
                 {
                     "id": FAKE_SESSION_ID,
                     "status": "closed",
@@ -48,9 +55,10 @@ def _mock_supabase_with_one_session() -> MagicMock:
                         "release_year": 1979,
                     },
                 }
-            ]
+            ])
         elif name == "analysis_messages":
-            t.select.return_value.in_.return_value.order.return_value.execute.return_value.data = [
+            # _collect_user_data: .select(...).in_(...).order(...).limit(...).execute()
+            t.select.return_value.in_.return_value.order.return_value.limit.return_value.execute = _ae([
                 {
                     "session_id": FAKE_SESSION_ID,
                     "role": "user",
@@ -63,17 +71,19 @@ def _mock_supabase_with_one_session() -> MagicMock:
                     "content": "La zona opera como…",
                     "created_at": "2026-04-01T10:02:00+00:00",
                 },
-            ]
+            ])
         elif name == "semantic_tags":
-            t.select.return_value.in_.return_value.execute.return_value.data = [
+            # _collect_user_data: .select(...).in_(...).execute()
+            t.select.return_value.in_.return_value.execute = _ae([
                 {
                     "session_id": FAKE_SESSION_ID,
                     "tag_type": "temas_principales",
                     "tag_value": ["fe", "deseo"],
                 }
-            ]
+            ])
         elif name == "user_profile":
-            t.select.return_value.eq.return_value.execute.return_value.data = [
+            # _collect_full_user_data: .select("*").eq("user_id").execute()
+            t.select.return_value.eq.return_value.execute = _ae([
                 {
                     "user_id": FAKE_USER_ID,
                     "temas_frecuentes": [["fe", 2]],
@@ -85,13 +95,15 @@ def _mock_supabase_with_one_session() -> MagicMock:
                     "reference_directors": ["Tarkovsky"],
                     "instructions": "Sé crítico.",
                 }
-            ]
+            ])
         elif name == "user_memory":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
+            # _collect_full_user_data: .select(...).eq("user_id").order(...).execute()
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([
                 {"content": "Estudio cine ruso", "created_at": "2026-03-15T09:00:00+00:00"}
-            ]
+            ])
         elif name == "movies_watched":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
+            # _collect_full_user_data: .select(...).eq("user_id").order(...).execute()
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([
                 {
                     "tmdb_id": 1398,
                     "title": "Stalker",
@@ -100,7 +112,7 @@ def _mock_supabase_with_one_session() -> MagicMock:
                     "initial_note": None,
                     "created_at": "2026-04-01T09:00:00+00:00",
                 }
-            ]
+            ])
         return t
 
     mock.table.side_effect = table_side_effect
@@ -113,13 +125,13 @@ def _mock_supabase_empty() -> MagicMock:
     def table_side_effect(name: str) -> MagicMock:
         t: MagicMock = MagicMock()
         if name == "analysis_sessions":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = []
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([])
         elif name == "user_profile":
-            t.select.return_value.eq.return_value.execute.return_value.data = []
+            t.select.return_value.eq.return_value.execute = _ae([])
         elif name == "user_memory":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = []
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([])
         elif name == "movies_watched":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = []
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([])
         return t
 
     mock.table.side_effect = table_side_effect

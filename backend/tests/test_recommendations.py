@@ -1,12 +1,12 @@
 from collections.abc import Generator
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.dependencies.auth import get_current_user_id
-from app.dependencies.groq_client import get_groq_client
 from app.dependencies.supabase import get_supabase_user
+from app.providers import get_llm_provider
 from app.services.recommendation_service import build_recommendation_prompt
 from main import app
 
@@ -40,13 +40,19 @@ def _auth_headers() -> dict[str, str]:
     return {"Authorization": "Bearer fake-valid-token"}
 
 
+def _ae(data: list | None = None) -> AsyncMock:
+    r: MagicMock = MagicMock()
+    r.data = data if data is not None else []
+    return AsyncMock(return_value=r)
+
+
 @pytest.fixture(autouse=True)
 def _overrides() -> Generator[None, None, None]:
     app.dependency_overrides[get_current_user_id] = _override_auth
     yield
     app.dependency_overrides.pop(get_current_user_id, None)
     app.dependency_overrides.pop(get_supabase_user, None)
-    app.dependency_overrides.pop(get_groq_client, None)
+    app.dependency_overrides.pop(get_llm_provider, None)
 
 
 # ── TEST 1 — GET /recommendations/ sin recomendaciones ───────────────
@@ -55,7 +61,8 @@ def _overrides() -> Generator[None, None, None]:
 @pytest.mark.asyncio
 async def test_get_recommendations_empty() -> None:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.execute.return_value.data = []
+    # list_active: .select("*").eq("user_id").eq("status", "active").order(...).execute()
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.execute = _ae([])
     app.dependency_overrides[get_supabase_user] = lambda: mock
 
     transport = ASGITransport(app=app)
@@ -73,9 +80,9 @@ async def test_get_recommendations_empty() -> None:
 @pytest.mark.asyncio
 async def test_get_recommendations_returns_active_only() -> None:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.execute.return_value.data = [
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value.execute = _ae([
         FAKE_REC_ACTIVE
-    ]
+    ])
     app.dependency_overrides[get_supabase_user] = lambda: mock
 
     transport = ASGITransport(app=app)
@@ -100,10 +107,11 @@ async def test_generate_requires_min_3_sessions() -> None:
     def table_side_effect(name: str) -> MagicMock:
         t: MagicMock = MagicMock()
         if name == "analysis_sessions":
-            t.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
+            # list_closed_session_ids: .select("id").eq("user_id").eq("status","closed").is_(...).execute()
+            t.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([
                 {"id": "s1"},
                 {"id": "s2"},
-            ]
+            ])
         return t
 
     mock.table.side_effect = table_side_effect
@@ -128,13 +136,10 @@ async def test_dismiss_recommendation_success() -> None:
     def table_side_effect(name: str) -> MagicMock:
         t: MagicMock = MagicMock()
         if name == "recommendations":
-            t.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
-                FAKE_REC_ACTIVE
-            ]
-            # Repo update_status: .update({...}).eq("id").eq("user_id")
-            t.update.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
-                dismissed_row
-            ]
+            # get_by_id: .select("*").eq("id").eq("user_id").execute()
+            t.select.return_value.eq.return_value.eq.return_value.execute = _ae([FAKE_REC_ACTIVE])
+            # update_status: .update({...}).eq("id").eq("user_id").execute()
+            t.update.return_value.eq.return_value.eq.return_value.execute = _ae([dismissed_row])
         return t
 
     mock.table.side_effect = table_side_effect
@@ -160,7 +165,7 @@ async def test_dismiss_recommendation_not_found() -> None:
     def table_side_effect(name: str) -> MagicMock:
         t: MagicMock = MagicMock()
         if name == "recommendations":
-            t.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+            t.select.return_value.eq.return_value.eq.return_value.execute = _ae([])
         return t
 
     mock.table.side_effect = table_side_effect

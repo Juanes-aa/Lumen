@@ -6,8 +6,8 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.dependencies.auth import get_current_user_id
-from app.dependencies.groq_client import get_groq_client
 from app.dependencies.supabase import get_supabase_user
+from app.providers import get_llm_provider
 from app.services.ai_service import extract_semantic_tags
 from main import app
 
@@ -61,6 +61,12 @@ VALID_TAGS_JSON: str = json.dumps(
 )
 
 
+def _ae(data: list | None = None) -> AsyncMock:
+    r: MagicMock = MagicMock()
+    r.data = data if data is not None else []
+    return AsyncMock(return_value=r)
+
+
 def _override_auth() -> str:
     return FAKE_USER_ID
 
@@ -71,8 +77,10 @@ def _auth_headers() -> dict[str, str]:
 
 def _make_sessions_table(session_rows: list[dict[str, object]]) -> MagicMock:
     mock: MagicMock = MagicMock()
-    # Repo get_session_with_status: .select("id, status").eq("id").eq("user_id")
-    mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = session_rows
+    # get_session_with_status: .select("id, status").eq("id").eq("user_id").is_("deleted_at", "null").execute()
+    mock.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae(session_rows)
+    # close_session: .update({...}).eq("id").eq("user_id").execute()
+    mock.update.return_value.eq.return_value.eq.return_value.execute = _ae([])
     return mock
 
 
@@ -81,12 +89,10 @@ def _make_messages_table(
     all_rows: list[dict[str, object]],
 ) -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = (
-        user_rows
-    )
-    mock.select.return_value.eq.return_value.order.return_value.execute.return_value.data = (
-        all_rows
-    )
+    # has_user_messages: .select("id").eq("session_id").eq("role", "user").execute()
+    mock.select.return_value.eq.return_value.eq.return_value.execute = _ae(user_rows)
+    # list_session_messages: .select("*").eq("session_id").order(...).execute()
+    mock.select.return_value.eq.return_value.order.return_value.execute = _ae(all_rows)
     return mock
 
 
@@ -112,18 +118,16 @@ def _make_supabase_for_endpoint(
 
 
 def _make_groq_valid() -> MagicMock:
+    """Mock LLMProvider (no groq client) para los tests unitarios de extract_semantic_tags."""
     mock: MagicMock = MagicMock()
-    completion: MagicMock = MagicMock()
-    completion.choices = [MagicMock()]
-    completion.choices[0].message.content = VALID_TAGS_JSON
-    # AsyncGroq: chat.completions.create es awaitable.
-    mock.chat.completions.create = AsyncMock(return_value=completion)
+    mock.complete = AsyncMock(return_value=VALID_TAGS_JSON)
     return mock
 
 
 def _make_groq_failing() -> MagicMock:
+    """Mock LLMProvider que falla en complete (para background tasks, no afecta la respuesta HTTP)."""
     mock: MagicMock = MagicMock()
-    mock.chat.completions.create = AsyncMock(side_effect=Exception("Groq unavailable"))
+    mock.complete = AsyncMock(side_effect=Exception("Groq unavailable"))
     return mock
 
 
@@ -133,7 +137,7 @@ def _overrides() -> Generator[None, None, None]:
     yield
     app.dependency_overrides.pop(get_current_user_id, None)
     app.dependency_overrides.pop(get_supabase_user, None)
-    app.dependency_overrides.pop(get_groq_client, None)
+    app.dependency_overrides.pop(get_llm_provider, None)
 
 
 # ── Test 1: Successful close ─────────────────────────────────────────
@@ -144,7 +148,6 @@ async def test_close_session_success() -> None:
     app.dependency_overrides[get_supabase_user] = lambda: _make_supabase_for_endpoint(
         [SESSION_ACTIVE], [USER_MESSAGE]
     )
-    app.dependency_overrides[get_groq_client] = lambda: _make_groq_failing()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -168,7 +171,6 @@ async def test_close_session_already_closed() -> None:
     app.dependency_overrides[get_supabase_user] = lambda: _make_supabase_for_endpoint(
         [SESSION_CLOSED], []
     )
-    app.dependency_overrides[get_groq_client] = lambda: _make_groq_failing()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -180,17 +182,14 @@ async def test_close_session_already_closed() -> None:
     assert response.status_code == 409
 
 
-# ── Test 3: Session belongs to another user → 403 ───────────────────
+# ── Test 3: Session belongs to another user → 404 ───────────────────
 
 
 @pytest.mark.asyncio
 async def test_close_session_other_user_returns_404() -> None:
-    # Tras el fix de ownership: una sesión ajena se trata como inexistente.
-    # El repo filtra por user_id en la query, devolviendo [] → 404.
     app.dependency_overrides[get_supabase_user] = lambda: _make_supabase_for_endpoint(
         [], []
     )
-    app.dependency_overrides[get_groq_client] = lambda: _make_groq_failing()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -210,7 +209,6 @@ async def test_close_session_not_found() -> None:
     app.dependency_overrides[get_supabase_user] = lambda: _make_supabase_for_endpoint(
         [], []
     )
-    app.dependency_overrides[get_groq_client] = lambda: _make_groq_failing()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -230,7 +228,6 @@ async def test_close_session_no_messages() -> None:
     app.dependency_overrides[get_supabase_user] = lambda: _make_supabase_for_endpoint(
         [SESSION_ACTIVE], []
     )
-    app.dependency_overrides[get_groq_client] = lambda: _make_groq_failing()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -248,10 +245,11 @@ async def test_close_session_no_messages() -> None:
 @pytest.mark.asyncio
 async def test_extract_semantic_tags_success() -> None:
     messages_table: MagicMock = MagicMock()
-    messages_table.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
+    # list_session_messages: .select("role, content").eq("session_id").order(...).execute()
+    messages_table.select.return_value.eq.return_value.order.return_value.execute = _ae([
         USER_MESSAGE,
         ASSISTANT_MESSAGE,
-    ]
+    ])
 
     semantic_table: MagicMock = MagicMock()
     inserted_rows: list[dict[str, object]] = []
@@ -259,16 +257,26 @@ async def test_extract_semantic_tags_success() -> None:
     def _capture_insert(data: dict[str, object]) -> MagicMock:
         inserted_rows.append(data)
         result: MagicMock = MagicMock()
-        result.execute.return_value.data = [{"id": "new-tag-id"}]
+        result.execute = _ae([{"id": "new-tag-id"}])
         return result
 
     semantic_table.insert.side_effect = _capture_insert
+
+    # analysis_sessions table: handles both user_id lookup (1 eq) and
+    # build_user_profile's closed-sessions query (2 eqs + is_).
+    sessions_table: MagicMock = MagicMock()
+    # get user_id after tagging: .select("user_id").eq("id").execute()
+    sessions_table.select.return_value.eq.return_value.execute = _ae([{"user_id": FAKE_USER_ID}])
+    # build_user_profile closed sessions: .select("id").eq("user_id").eq("status","closed").is_(...).execute()
+    sessions_table.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([])
 
     supabase_mock: MagicMock = MagicMock()
 
     def _router(name: str) -> MagicMock:
         if name == "analysis_messages":
             return messages_table
+        if name == "analysis_sessions":
+            return sessions_table
         return semantic_table
 
     supabase_mock.table.side_effect = _router
@@ -295,9 +303,10 @@ async def test_extract_semantic_tags_success() -> None:
 @pytest.mark.asyncio
 async def test_extract_semantic_tags_groq_fails_twice() -> None:
     messages_table: MagicMock = MagicMock()
-    messages_table.select.return_value.eq.return_value.order.return_value.execute.return_value.data = [
+    # list_session_messages: .select("role, content").eq("session_id").order(...).execute()
+    messages_table.select.return_value.eq.return_value.order.return_value.execute = _ae([
         USER_MESSAGE,
-    ]
+    ])
 
     semantic_table: MagicMock = MagicMock()
     supabase_mock: MagicMock = MagicMock()

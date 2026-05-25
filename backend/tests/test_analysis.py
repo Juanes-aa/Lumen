@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
@@ -6,8 +6,8 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.dependencies.auth import get_current_user_id
-from app.dependencies.groq_client import get_groq_client
 from app.dependencies.supabase import get_supabase_user
+from app.providers import get_llm_provider
 from main import app
 
 FAKE_USER_ID = "aaaaaaaa-0000-0000-0000-000000000001"
@@ -53,6 +53,12 @@ SESSION_ROW_OTHER_USER: dict[str, object] = {
 }
 
 
+def _ae(data: list | None = None) -> AsyncMock:
+    r: MagicMock = MagicMock()
+    r.data = data if data is not None else []
+    return AsyncMock(return_value=r)
+
+
 def _override_auth() -> str:
     return FAKE_USER_ID
 
@@ -63,18 +69,19 @@ def _auth_headers() -> dict[str, str]:
 
 def _mock_create_session_success() -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
-        MOVIE_ROW
-    ]
-    mock.table.return_value.insert.return_value.execute.return_value.data = [
-        SESSION_INSERT_ROW
-    ]
+    # get_watched_by_id: movies_watched.select.eq("id").eq("user_id").execute()
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute = _ae([MOVIE_ROW])
+    # create_session: analysis_sessions.insert.execute()
+    mock.table.return_value.insert.return_value.execute = _ae([SESSION_INSERT_ROW])
+    # mark_has_analysis: movies_watched.update.eq("movie_id").eq("user_id").execute()
+    mock.table.return_value.update.return_value.eq.return_value.eq.return_value.execute = _ae([])
     return mock
 
 
 def _mock_movie_not_found() -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+    # get_watched_by_id returns empty list → 404
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute = _ae([])
     return mock
 
 
@@ -84,10 +91,12 @@ def _mock_list_sessions(rows: list[dict[str, object]]) -> MagicMock:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "analysis_sessions":
-            table_mock.select.return_value.eq.return_value.order.return_value.execute.return_value.data = rows
+            # list_user_sessions: .select(...).eq("user_id").is_("deleted_at","null").order(...).limit(...).execute()
+            table_mock.select.return_value.eq.return_value.is_.return_value.order.return_value.limit.return_value.execute = _ae(rows)
         elif table_name == "semantic_tags":
+            # session_ids_with_tags: .select("session_id").in_("session_id", [...]).execute()
             session_ids = [str(r["id"]) for r in rows]
-            table_mock.select.return_value.in_.return_value.execute.return_value.data = (
+            table_mock.select.return_value.in_.return_value.execute = _ae(
                 [{"session_id": sid} for sid in session_ids] if rows else []
             )
         return table_mock
@@ -98,8 +107,8 @@ def _mock_list_sessions(rows: list[dict[str, object]]) -> MagicMock:
 
 def _mock_get_session(rows: list[dict[str, object]]) -> MagicMock:
     mock: MagicMock = MagicMock()
-    # Repo aplica .eq("id").eq("user_id"), por eso 2 .eq.
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = rows
+    # get_session_by_id: .select(...).eq("id").eq("user_id").is_("deleted_at","null").execute()
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae(rows)
     return mock
 
 
@@ -109,7 +118,7 @@ def _overrides() -> Generator[None, None, None]:
     yield
     app.dependency_overrides.pop(get_current_user_id, None)
     app.dependency_overrides.pop(get_supabase_user, None)
-    app.dependency_overrides.pop(get_groq_client, None)
+    app.dependency_overrides.pop(get_llm_provider, None)
 
 
 # ── POST /analysis/sessions ─────────────────────────────────────────
@@ -230,8 +239,6 @@ async def test_get_session_not_found() -> None:
 
 @pytest.mark.asyncio
 async def test_get_session_wrong_user() -> None:
-    # Tras el fix de ownership, el repo filtra por user_id en la query;
-    # una sesión ajena no aparece en los resultados → 404 (no 403).
     app.dependency_overrides[get_supabase_user] = lambda: _mock_get_session([])
 
     transport = ASGITransport(app=app)
@@ -252,10 +259,12 @@ def _mock_delete_session_success() -> MagicMock:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "analysis_sessions":
-            # Repo get_session_with_status: .select("id, status").eq("id").eq("user_id")
-            table_mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
+            # get_session_with_status: .select("id, status").eq("id").eq("user_id").is_(...).execute()
+            table_mock.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([
                 {"id": FAKE_SESSION_ID, "status": "active"}
-            ]
+            ])
+            # delete_session_cascade: .update({...}).eq("id").eq("user_id").execute()
+            table_mock.update.return_value.eq.return_value.eq.return_value.execute = _ae([])
         return table_mock
 
     mock.table.side_effect = table_side_effect
@@ -268,8 +277,8 @@ def _mock_delete_session_other_user() -> MagicMock:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "analysis_sessions":
-            # Sesión ajena: tras el fix la query con .eq("user_id") devuelve [].
-            table_mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+            # Sesión ajena: la query con .eq("user_id") devuelve []
+            table_mock.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([])
         return table_mock
 
     mock.table.side_effect = table_side_effect
@@ -282,7 +291,7 @@ def _mock_delete_session_not_found() -> MagicMock:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "analysis_sessions":
-            table_mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+            table_mock.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([])
         return table_mock
 
     mock.table.side_effect = table_side_effect
@@ -305,7 +314,6 @@ async def test_delete_session_success() -> None:
 
 @pytest.mark.asyncio
 async def test_delete_session_other_user_returns_404() -> None:
-    # Tras el fix, una sesión ajena se trata como inexistente (no info leak).
     app.dependency_overrides[get_supabase_user] = lambda: _mock_delete_session_other_user()
 
     transport = ASGITransport(app=app)
@@ -358,14 +366,11 @@ def test_build_analysis_prompt_with_prior_sessions() -> None:
 from app.services.ai_service import generate_session_suggestions
 
 
-def _mock_groq_returning(content: str) -> MagicMock:
-    groq_mock: MagicMock = MagicMock()
-    completion: MagicMock = MagicMock()
-    completion.choices = [MagicMock()]
-    completion.choices[0].message.content = content
-    # AsyncGroq: chat.completions.create debe ser awaitable.
-    groq_mock.chat.completions.create = AsyncMock(return_value=completion)
-    return groq_mock
+def _mock_provider_returning(content: str) -> MagicMock:
+    """Mock LLMProvider (complete)."""
+    provider_mock: MagicMock = MagicMock()
+    provider_mock.complete = AsyncMock(return_value=content)
+    return provider_mock
 
 
 @pytest.mark.asyncio
@@ -377,16 +382,16 @@ async def test_generate_session_suggestions_parses_json() -> None:
         ' "¿Cómo estructura Tarkovsky el tiempo?",'
         ' "¿Qué contexto soviético resuena?"]}'
     )
-    groq_mock = _mock_groq_returning(payload)
-    result = await generate_session_suggestions("Stalker", "Tres hombres entran a la zona…", groq_mock)
+    result = await generate_session_suggestions("Stalker", "Tres hombres entran a la zona…", _mock_provider_returning(payload))
     assert len(result) == 5
     assert result[0].startswith("¿Qué representa")
 
 
 @pytest.mark.asyncio
 async def test_generate_session_suggestions_returns_empty_on_invalid_json() -> None:
-    groq_mock = _mock_groq_returning("no soy json")
-    result = await generate_session_suggestions("X", "Y", groq_mock)
+    provider_mock: MagicMock = MagicMock()
+    provider_mock.complete = AsyncMock(return_value="no soy json")
+    result = await generate_session_suggestions("X", "Y", provider_mock)
     assert result == []
 
 
@@ -395,7 +400,7 @@ async def test_generate_session_suggestions_returns_empty_on_invalid_json() -> N
 
 def _mock_session_for_suggestions(user_id: str = FAKE_USER_ID) -> MagicMock:
     mock: MagicMock = MagicMock()
-    # Repo get_session_by_id: .select(...).eq("id").eq("user_id")
+    # get_session_by_id: .select(...).eq("id").eq("user_id").is_("deleted_at","null").execute()
     rows: list[dict[str, object]] = (
         [
             {
@@ -407,17 +412,22 @@ def _mock_session_for_suggestions(user_id: str = FAKE_USER_ID) -> MagicMock:
         if user_id == FAKE_USER_ID
         else []
     )
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = rows
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae(rows)
     return mock
+
+
+def _mock_provider_for_suggestions(content: str) -> MagicMock:
+    """Mock LLMProvider que devuelve content para generate_session_suggestions."""
+    provider_mock: MagicMock = MagicMock()
+    provider_mock.complete = AsyncMock(return_value=content)
+    return provider_mock
 
 
 @pytest.mark.asyncio
 async def test_get_suggestions_success() -> None:
-    payload: str = (
-        '{"suggestions": ["q1", "q2", "q3", "q4", "q5"]}'
-    )
+    payload: str = '{"suggestions": ["q1", "q2", "q3", "q4", "q5"]}'
     app.dependency_overrides[get_supabase_user] = lambda: _mock_session_for_suggestions()
-    app.dependency_overrides[get_groq_client] = lambda: _mock_groq_returning(payload)
+    app.dependency_overrides[get_llm_provider] = lambda: _mock_provider_for_suggestions(payload)
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -433,9 +443,10 @@ async def test_get_suggestions_success() -> None:
 @pytest.mark.asyncio
 async def test_get_suggestions_session_not_found() -> None:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+    # get_session_by_id: .select(...).eq("id").eq("user_id").is_("deleted_at","null").execute()
+    mock.table.return_value.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([])
     app.dependency_overrides[get_supabase_user] = lambda: mock
-    app.dependency_overrides[get_groq_client] = lambda: MagicMock()
+    app.dependency_overrides[get_llm_provider] = lambda: MagicMock()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -448,11 +459,10 @@ async def test_get_suggestions_session_not_found() -> None:
 
 @pytest.mark.asyncio
 async def test_get_suggestions_other_user_returns_404() -> None:
-    # Tras el fix, sesión ajena → 404 (el helper devuelve [] para user_id ajeno).
     app.dependency_overrides[get_supabase_user] = lambda: _mock_session_for_suggestions(
         user_id=OTHER_USER_ID
     )
-    app.dependency_overrides[get_groq_client] = lambda: MagicMock()
+    app.dependency_overrides[get_llm_provider] = lambda: MagicMock()
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -472,53 +482,60 @@ def _mock_supabase_for_streaming() -> MagicMock:
     def table_side_effect(name: str) -> MagicMock:
         t: MagicMock = MagicMock()
         if name == "analysis_sessions":
-            t.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
+            # get_session_by_id: .select(...).eq("id").eq("user_id").is_(...).execute()
+            t.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([
                 {
                     "id": FAKE_SESSION_ID,
                     "status": "active",
                     "movie_id": FAKE_MOVIE_ID,
                     "movies_watched": {"title": "Stalker", "overview": "synopsis"},
                 }
-            ]
-            t.select.return_value.eq.return_value.eq.return_value.neq.return_value.order.return_value.limit.return_value.execute.return_value.data = []
+            ])
+            # list_recent_closed_sessions_with_movie: .select(...).eq(...).eq(...).is_(...).neq(...).order(...).limit(...).execute()
+            t.select.return_value.eq.return_value.eq.return_value.is_.return_value.neq.return_value.order.return_value.limit.return_value.execute = _ae([])
         elif name == "analysis_messages":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = []
-            t.insert.return_value.execute.return_value.data = [
+            # list_session_history: .select("role, content").eq("session_id").order(...).execute()
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([])
+            # insert_message (user + assistant): .insert({...}).execute()
+            t.insert.return_value.execute = _ae([
                 {"id": "00000000-0000-0000-0000-000000000099"}
-            ]
+            ])
         elif name == "user_profile":
-            t.select.return_value.eq.return_value.execute.return_value.data = []
+            # get_user_daily_limit (tier_service) AND get_prompt_context (profile_repo):
+            # both use .select(...).eq("user_id").execute()
+            t.select.return_value.eq.return_value.execute = _ae([])
         elif name == "user_memory":
-            t.select.return_value.eq.return_value.order.return_value.execute.return_value.data = []
+            # list_user_memory_contents: .select("content").eq("user_id").order(...).execute()
+            t.select.return_value.eq.return_value.order.return_value.execute = _ae([])
+        elif name == "user_message_usage":
+            # get_daily_count: .select("messages_sent").eq("user_id").eq("usage_date").execute()
+            t.select.return_value.eq.return_value.eq.return_value.execute = _ae([{"messages_sent": 0}])
         return t
 
     mock.table.side_effect = table_side_effect
+    # increment_daily_count uses RPC, not table
+    mock.rpc.return_value.execute = _ae([])
     return mock
 
 
-def _mock_groq_streaming(tokens: list[str]) -> MagicMock:
-    groq_mock: MagicMock = MagicMock()
+def _mock_provider_streaming(tokens: list[str]) -> MagicMock:
+    """Mock LLMProvider con stream que emite tokens directamente."""
+    provider_mock: MagicMock = MagicMock()
 
-    def make_chunk(text: str) -> MagicMock:
-        chunk: MagicMock = MagicMock()
-        chunk.choices = [MagicMock()]
-        chunk.choices[0].delta.content = text
-        return chunk
-
-    async def _async_iter():
+    async def _stream(
+        messages: list[dict[str, str]], **kwargs: object
+    ) -> AsyncGenerator[str, None]:
         for tok in tokens:
-            yield make_chunk(tok)
+            yield tok
 
-    # AsyncGroq stream: `await create(stream=True)` devuelve un objeto
-    # `async for`-able. Aquí retornamos directamente el async generator.
-    groq_mock.chat.completions.create = AsyncMock(return_value=_async_iter())
-    return groq_mock
+    provider_mock.stream = _stream
+    return provider_mock
 
 
 @pytest.mark.asyncio
 async def test_stream_message_emits_tokens_and_done() -> None:
     app.dependency_overrides[get_supabase_user] = lambda: _mock_supabase_for_streaming()
-    app.dependency_overrides[get_groq_client] = lambda: _mock_groq_streaming(["Hola", " mundo"])
+    app.dependency_overrides[get_llm_provider] = lambda: _mock_provider_streaming(["Hola", " mundo"])
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

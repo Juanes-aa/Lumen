@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -10,6 +10,12 @@ from main import app
 
 FAKE_USER_ID = "aaaaaaaa-0000-0000-0000-000000000001"
 FAKE_NOTE_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc"
+
+
+def _ae(data: list | None = None) -> AsyncMock:
+    r: MagicMock = MagicMock()
+    r.data = data if data is not None else []
+    return AsyncMock(return_value=r)
 
 
 def _override_auth() -> str:
@@ -34,7 +40,8 @@ def _overrides() -> Generator[None, None, None]:
 @pytest.mark.asyncio
 async def test_get_semantic_profile_no_profile() -> None:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.execute.return_value.data = []
+    # get_profile: .select("*").eq("user_id").execute()
+    mock.table.return_value.select.return_value.eq.return_value.execute = _ae([])
 
     app.dependency_overrides[get_supabase_user] = lambda: mock
 
@@ -67,9 +74,8 @@ async def test_get_semantic_profile_with_profile() -> None:
     }
 
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
-        profile_row
-    ]
+    # get_profile: .select("*").eq("user_id").execute()
+    mock.table.return_value.select.return_value.eq.return_value.execute = _ae([profile_row])
 
     app.dependency_overrides[get_supabase_user] = lambda: mock
 
@@ -92,7 +98,8 @@ async def test_get_semantic_profile_with_profile() -> None:
 # ── TEST 3 — build_user_profile con sesiones y tags reales ───────────
 
 
-def test_build_user_profile_with_data() -> None:
+@pytest.mark.asyncio
+async def test_build_user_profile_with_data() -> None:
     from app.services.ai_service import build_user_profile
 
     upsert_calls: list[dict[str, object]] = []
@@ -100,21 +107,25 @@ def test_build_user_profile_with_data() -> None:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "analysis_sessions":
-            table_mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = [
+            # build_user_profile: .select("id").eq("user_id").eq("status","closed").is_("deleted_at","null").execute()
+            table_mock.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([
                 {"id": "sess-0001"},
                 {"id": "sess-0002"},
-            ]
+            ])
         elif table_name == "semantic_tags":
-            table_mock.select.return_value.in_.return_value.execute.return_value.data = [
+            # .select("tag_type, tag_value").in_("session_id", [...]).execute()
+            table_mock.select.return_value.in_.return_value.execute = _ae([
                 {"tag_type": "temas_principales", "tag_value": ["identidad", "tiempo"]},
                 {"tag_type": "directores_estilo_similar", "tag_value": ["Tarkovsky"]},
                 {"tag_type": "temas_principales", "tag_value": ["identidad"]},
-            ]
+            ])
         elif table_name == "user_profile":
 
             def track_upsert(*args: object, **kwargs: object) -> MagicMock:
                 upsert_calls.append({"args": args, "kwargs": kwargs})
-                return MagicMock()
+                result: MagicMock = MagicMock()
+                result.execute = _ae([])
+                return result
 
             table_mock.upsert.side_effect = track_upsert
         return table_mock
@@ -122,7 +133,8 @@ def test_build_user_profile_with_data() -> None:
     mock_supabase: MagicMock = MagicMock()
     mock_supabase.table.side_effect = table_side_effect
 
-    build_user_profile(FAKE_USER_ID, mock_supabase)
+    with patch("app.services.ai_service.asyncio.sleep", new_callable=AsyncMock):
+        await build_user_profile(FAKE_USER_ID, mock_supabase)
 
     assert len(upsert_calls) == 1
 
@@ -130,7 +142,8 @@ def test_build_user_profile_with_data() -> None:
 # ── TEST 4 — build_user_profile sin sesiones cerradas no hace upsert ─
 
 
-def test_build_user_profile_no_sessions() -> None:
+@pytest.mark.asyncio
+async def test_build_user_profile_no_sessions() -> None:
     from app.services.ai_service import build_user_profile
 
     upsert_calls: list[dict[str, object]] = []
@@ -138,12 +151,15 @@ def test_build_user_profile_no_sessions() -> None:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "analysis_sessions":
-            table_mock.select.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+            # No closed sessions → returns early
+            table_mock.select.return_value.eq.return_value.eq.return_value.is_.return_value.execute = _ae([])
         elif table_name == "user_profile":
 
             def track_upsert(*args: object, **kwargs: object) -> MagicMock:
                 upsert_calls.append({"args": args, "kwargs": kwargs})
-                return MagicMock()
+                result: MagicMock = MagicMock()
+                result.execute = _ae([])
+                return result
 
             table_mock.upsert.side_effect = track_upsert
         return table_mock
@@ -151,7 +167,7 @@ def test_build_user_profile_no_sessions() -> None:
     mock_supabase: MagicMock = MagicMock()
     mock_supabase.table.side_effect = table_side_effect
 
-    build_user_profile(FAKE_USER_ID, mock_supabase)
+    await build_user_profile(FAKE_USER_ID, mock_supabase)
 
     assert len(upsert_calls) == 0
 
@@ -161,14 +177,9 @@ def test_build_user_profile_no_sessions() -> None:
 
 @pytest.mark.asyncio
 async def test_update_preferences_success() -> None:
-    saved_row: dict[str, object] = {
-        "user_id": FAKE_USER_ID,
-        "favorite_genres": ["Drama", "Ciencia ficción"],
-        "reference_directors": ["Tarkovsky"],
-    }
-
     mock: MagicMock = MagicMock()
-    mock.table.return_value.upsert.return_value.execute.return_value.data = [saved_row]
+    # upsert_preferences: .upsert({...}).execute()
+    mock.table.return_value.upsert.return_value.execute = _ae([])
 
     app.dependency_overrides[get_supabase_user] = lambda: mock
 
@@ -190,13 +201,9 @@ async def test_update_preferences_success() -> None:
 
 @pytest.mark.asyncio
 async def test_update_instructions_success() -> None:
-    saved_row: dict[str, object] = {
-        "user_id": FAKE_USER_ID,
-        "instructions": "Actúa como crítico exigente.",
-    }
-
     mock: MagicMock = MagicMock()
-    mock.table.return_value.upsert.return_value.execute.return_value.data = [saved_row]
+    # upsert_instructions: .upsert({...}).execute()
+    mock.table.return_value.upsert.return_value.execute = _ae([])
 
     app.dependency_overrides[get_supabase_user] = lambda: mock
 
@@ -244,8 +251,10 @@ async def test_add_memory_note_success() -> None:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "user_memory":
-            table_mock.select.return_value.eq.return_value.execute.return_value.data = []
-            table_mock.insert.return_value.execute.return_value.data = [inserted_row]
+            # count_user_memory: .select("id").eq("user_id").execute()
+            table_mock.select.return_value.eq.return_value.execute = _ae([])
+            # insert_memory_note: .insert({...}).execute()
+            table_mock.insert.return_value.execute = _ae([inserted_row])
         return table_mock
 
     mock: MagicMock = MagicMock()
@@ -276,7 +285,8 @@ async def test_add_memory_note_limit_reached() -> None:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "user_memory":
-            table_mock.select.return_value.eq.return_value.execute.return_value.data = existing_notes
+            # count_user_memory: .select("id").eq("user_id").execute()
+            table_mock.select.return_value.eq.return_value.execute = _ae(existing_notes)
         return table_mock
 
     mock: MagicMock = MagicMock()
@@ -308,8 +318,8 @@ async def test_delete_memory_note_success() -> None:
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "user_memory":
-            # Repo delete_memory_note: .delete().eq("id").eq("user_id")
-            table_mock.delete.return_value.eq.return_value.eq.return_value.execute.return_value.data = [note_row]
+            # delete_memory_note: .delete().eq("id").eq("user_id").execute()
+            table_mock.delete.return_value.eq.return_value.eq.return_value.execute = _ae([note_row])
         return table_mock
 
     mock: MagicMock = MagicMock()
@@ -333,12 +343,11 @@ async def test_delete_memory_note_success() -> None:
 
 @pytest.mark.asyncio
 async def test_delete_memory_note_other_user_returns_404() -> None:
-    # Tras el fix de ownership: una nota ajena → 404 (la query con
-    # .eq("user_id") devuelve [] y no afecta filas).
     def table_side_effect(table_name: str) -> MagicMock:
         table_mock: MagicMock = MagicMock()
         if table_name == "user_memory":
-            table_mock.delete.return_value.eq.return_value.eq.return_value.execute.return_value.data = []
+            # delete_memory_note: .delete().eq("id").eq("user_id").execute()
+            table_mock.delete.return_value.eq.return_value.eq.return_value.execute = _ae([])
         return table_mock
 
     mock: MagicMock = MagicMock()

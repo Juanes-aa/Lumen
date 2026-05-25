@@ -1,6 +1,6 @@
 from collections.abc import Generator
 from datetime import UTC, datetime
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -43,29 +43,38 @@ def _auth_headers() -> dict[str, str]:
     return {"Authorization": "Bearer fake-valid-token"}
 
 
+def _ae(data: list | None = None) -> AsyncMock:
+    r: MagicMock = MagicMock()
+    r.data = data if data is not None else []
+    return AsyncMock(return_value=r)
+
+
 def _mock_insert_success() -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.insert.return_value.execute.return_value.data = [INSERTED_ROW]
+    # add_watched: table("movies_watched").insert(row).execute()
+    mock.table.return_value.insert.return_value.execute = _ae([INSERTED_ROW])
     return mock
 
 
 def _mock_insert_duplicate() -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.insert.return_value.execute.side_effect = Exception(
-        "duplicate key value violates unique constraint"
+    mock.table.return_value.insert.return_value.execute = AsyncMock(
+        side_effect=Exception("duplicate key value violates unique constraint")
     )
     return mock
 
 
 def _mock_select(rows: list[dict[str, object]]) -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.select.return_value.eq.return_value.order.return_value.execute.return_value.data = rows
+    # list_watched: .select("*").eq(...).order(...).limit(...).execute()
+    mock.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value.execute = _ae(rows)
     return mock
 
 
 def _mock_delete(rows: list[dict[str, object]]) -> MagicMock:
     mock: MagicMock = MagicMock()
-    mock.table.return_value.delete.return_value.eq.return_value.eq.return_value.execute.return_value.data = rows
+    # delete_watched: .delete().eq("id").eq("user_id").execute()
+    mock.table.return_value.delete.return_value.eq.return_value.eq.return_value.execute = _ae(rows)
     return mock
 
 

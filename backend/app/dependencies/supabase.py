@@ -88,4 +88,10 @@ async def get_supabase_user(request: Request) -> AsyncGenerator[AsyncClient, Non
     try:
         yield client
     finally:
-        await client.aclose()
+        # supabase-py 2.x does not always expose aclose() as a public method;
+        # close the underlying PostgREST httpx session when available.
+        aclose = getattr(client, "aclose", None) or getattr(
+            getattr(client, "postgrest", None), "aclose", None
+        )
+        if aclose is not None:
+            await aclose()
